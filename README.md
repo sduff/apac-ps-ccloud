@@ -1,4 +1,3 @@
 # apac-ps-ccloud
 
-Simon Duff
-https://linkedin.com/in/sduff
+Examples of managing [Confluent Cloud](https://confluent.cloud) via the [Confluent Terraform provider](https://registry.terraform.io/providers/confluentinc/confluent/latest/docs)
