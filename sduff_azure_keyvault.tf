@@ -27,7 +27,7 @@ resource "confluent_api_key" "azure_keyvault_svc_acct_api_key" {
 
 # Create a resource Group
 resource "azurerm_resource_group" "rg" {
-  name ="apac-ps-confluent-cloud-rg"
+  name     = "apac-ps-confluent-cloud-rg"
   location = "australiasoutheast"
   tags = {
     owner_email = "sduff@confluent.io"
@@ -72,7 +72,7 @@ resource "azurerm_key_vault" "keyvault" {
 
 # Create a new secret and store in the keyvault
 resource "azurerm_key_vault_secret" "azure_keyvault_svc_acct_api_key_secret" {
-  name         = confluent_service_account.azuzre_keyvault_svc_acct.display_name
+  name         = confluent_service_account.azure_keyvault_svc_acct.display_name
   value        = "${confluent_api_key.azure_keyvault_svc_acct_api_key.id}:${confluent_api_key.azure_keyvault_svc_acct_api_key.secret}"
   key_vault_id = azurerm_key_vault.keyvault.id
   depends_on   = [azurerm_key_vault.keyvault]
