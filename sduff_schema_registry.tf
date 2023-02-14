@@ -2,7 +2,7 @@
 
 # Need an API Key to manage this Schema Registry
 # Using an existing Service Account
-data "confluent_service_account" "terraform_sa_service_account" {
+data "confluent_service_account" "terraform_sa" {
   display_name = "terraform_sa"
 }
 
@@ -21,7 +21,7 @@ resource "confluent_api_key" "terraform_sa_schema_registry_api_key" {
     api_version = confluent_schema_registry_cluster.schema_registry.api_version
     kind        = confluent_schema_registry_cluster.schema_registry.kind
     environment {
-      id = confluent_environment.env.id
+      id = confluent_environment.shared-env.id
     }
   }
 
