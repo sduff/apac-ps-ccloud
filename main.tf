@@ -4,6 +4,11 @@ terraform {
       source  = "confluentinc/confluent"
       version = "1.28.0"
     }
+
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 3.0.2"
+    }
   }
 }
 
@@ -25,6 +30,9 @@ provider "confluent" {
   cloud_api_secret = var.confluent_cloud_api_secret
 }
 
+provider "azurerm" {
+  features {}
+}
 
 resource "confluent_environment" "shared-env" {
   display_name = "Terraform-Environment"
