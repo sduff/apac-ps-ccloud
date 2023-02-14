@@ -11,9 +11,9 @@ resource "confluent_api_key" "terraform_sa_schema_registry_api_key" {
   display_name = "terraform_sa_schema_registry_api_key"
   description  = "Schema Registry API Key that is owned by 'terraform-sa' service account"
   owner {
-    id          = confluent_service_account.terraform_sa.id
-    api_version = confluent_service_account.terraform_sa.api_version
-    kind        = confluent_service_account.terraform_sa.kind
+    id          = data.confluent_service_account.terraform_sa.id
+    api_version = data.confluent_service_account.terraform_sa.api_version
+    kind        = data.confluent_service_account.terraform_sa.kind
   }
 
   managed_resource {
