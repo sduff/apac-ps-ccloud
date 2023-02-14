@@ -1,8 +1,9 @@
 # Example showing how to save API Key credentials to Azure Key Vault
 
 ### Confluent Cloud ###
+
 # Create a service account
-source "confluent_service_account" "azure_keyvault_svc_acct" {
+resource "confluent_service_account" "azure_keyvault_svc_acct" {
   display_name = "azure-keyvault-service-account"
   description  = "Azure Key Vault Example Service Account"
 }

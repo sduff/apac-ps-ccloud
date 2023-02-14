@@ -37,4 +37,3 @@ provider "azurerm" {
 resource "confluent_environment" "shared-env" {
   display_name = "Terraform-Environment"
 }
-
