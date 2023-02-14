@@ -13,9 +13,9 @@ resource "confluent_api_key" "azure_keyvault_svc_acct_api_key" {
   display_name = "azure-keyvault-service-account-api-key"
   description  = "API Key for the Azure Key Vault Example Service Account"
   owner {
-    id          = confluent_service_account.svc_acct.id
-    api_version = confluent_service_account.svc_acct.api_version
-    kind        = confluent_service_account.svc_acct.kind
+    id          = confluent_service_account.azure_keyvault_svc_acct.id
+    api_version = confluent_service_account.azure_keyvault_svc_acct.api_version
+    kind        = confluent_service_account.azure_keyvault_svc_acct.kind
   }
 
   lifecycle {
