@@ -24,10 +24,10 @@ resource "confluent_role_binding" "sduff-example-topic-devwrite" {
   crn_pattern = "${confluent_kafka_cluster.sduff-example-cluster.rbac_crn}/kafka=${confluent_kafka_cluster.sduff-example-cluster.id}/topic=${confluent_kafka_topic.sduff-example-topic.topic_name}"
 }
 
-# Consumer - Consumer Group Write
-resource "confluent_role_binding" "sduff-example-topic-devwrite-consumergroup" {
+# Consumer - Consumer Group Read
+resource "confluent_role_binding" "sduff-example-topic-devread-consumergroup" {
   principal   = "User:${confluent_service_account.sduff_svc_acct.id}"
-  role_name   = "DeveloperWrite"
+  role_name   = "DeveloperRead"
   crn_pattern = "${confluent_kafka_cluster.sduff-example-cluster.rbac_crn}/kafka=${confluent_kafka_cluster.sduff-example-cluster.id}/group=*"
 }
 
