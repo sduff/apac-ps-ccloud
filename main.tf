@@ -37,3 +37,8 @@ provider "azurerm" {
 resource "confluent_environment" "shared-env" {
   display_name = "Terraform-Environment"
 }
+
+# Service Account to manage Confluent Cloud resources (OrgAdmin)
+data "confluent_service_account" "terraform_sa" {
+  display_name = "terraform_sa"
+}

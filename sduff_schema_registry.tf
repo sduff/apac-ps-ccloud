@@ -1,12 +1,6 @@
 # Configure a Schema Registry for this environment
 
-# Need an API Key to manage this Schema Registry
-# Using an existing Service Account
-data "confluent_service_account" "terraform_sa" {
-  display_name = "terraform_sa"
-}
-
-# Create a Schema Registry API Key for this Service Account
+# Create a Schema Registry API Key for the Service Account
 resource "confluent_api_key" "terraform_sa_schema_registry_api_key" {
   display_name = "terraform_sa_schema_registry_api_key"
   description  = "Schema Registry API Key that is owned by 'terraform-sa' service account"
@@ -48,7 +42,7 @@ resource "confluent_schema_registry_cluster_config" "sr_config" {
   rest_endpoint = confluent_schema_registry_cluster.schema_registry.rest_endpoint
 
   credentials {
-    key = confluent_api_key.terraform_sa_schema_registry_api_key.id
+    key    = confluent_api_key.terraform_sa_schema_registry_api_key.id
     secret = confluent_api_key.terraform_sa_schema_registry_api_key.secret
   }
 

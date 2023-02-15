@@ -19,13 +19,13 @@ resource "confluent_kafka_cluster" "sduff-example-cluster" {
 # Kafka API Key
 # This does not need to be stored in the KeyVault as it is only used in
 # Terraform for configuring the Kafka cluster
-resource "confluent_api_key" "sduff-svc-acct-example-cluster-kafka-api-key" {
-  display_name = "sduff-svc-acct-example-cluster-kafka-api-key"
-  description  = "sduff Service Account Example Cluster Kafka API Key"
+resource "confluent_api_key" "sduff-example-cluster-kafka-api-key" {
+  display_name = "sduff-example-cluster-kafka-api-key"
+  description  = "sduff Example Cluster Kafka API Key"
   owner {
-    id          = confluent_service_account.sduff-svc-acct.id
-    api_version = confluent_service_account.sduff-svc-acct.api_version
-    kind        = confluent_service_account.sduff-svc-acct.kind
+    id          = data.confluent_service_account.terraform_sa.id
+    api_version = data.confluent_service_account.terraform_sa.api_version
+    kind        = data.confluent_service_account.terraform_sa.kind
   }
 
   managed_resource {
@@ -52,8 +52,8 @@ resource "confluent_kafka_topic" "sduff-std-cluster-topic-ironman" {
   topic_name    = "sduff-ironman"
   rest_endpoint = confluent_kafka_cluster.sduff-std-cluster.rest_endpoint
   credentials {
-    key    = confluent_api_key.sduff-svc-acct-example-cluster-kafka-api-key.id
-    secret = confluent_api_key.sduff-svc-acct-example-cluster-kafka-api-key.secret
+    key    = confluent_api_key.sduff-example-cluster-kafka-api-key.id
+    secret = confluent_api_key.sduff-example-cluster-kafka-api-key.secret
   }
 
   lifecycle {

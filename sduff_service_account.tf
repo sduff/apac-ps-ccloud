@@ -25,7 +25,7 @@ resource "confluent_role_binding" "sduff-example-topic-devwrite" {
 }
 
 # Consumer - Consumer Group Write
-resource "confluent_role_binding" "sduff-example-topic-devwrite" {
+resource "confluent_role_binding" "sduff-example-topic-devwrite-consumergroup" {
   principal   = "User:${confluent_service_account.sduff-svc-acct.id}"
   role_name   = "DeveloperWrite"
   crn_pattern = "${confluent_kafka_cluster.sduff-example-cluster.rbac_crn}/kafka=${confluent_kafka_cluster.sduff-example-cluster.id}/group=*"
