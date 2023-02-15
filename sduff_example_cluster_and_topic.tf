@@ -44,7 +44,7 @@ resource "confluent_api_key" "sduff-example-cluster-kafka-api-key" {
 }
 
 # Create a topic in this cluster
-resource "confluent_kafka_topic" "sduff-example-topic {
+resource "confluent_kafka_topic" "sduff-example-topic" {
   kafka_cluster {
     id = confluent_kafka_cluster.sduff-example-cluster.id
   }
