@@ -1,6 +1,6 @@
 # Create a standard cluster
 resource "confluent_kafka_cluster" "sduff-example-cluster" {
-  display_name = "sduff-std-cluster"
+  display_name = "sduff-example-cluster"
 
   availability = "SINGLE_ZONE"
   cloud        = "AWS"
@@ -44,13 +44,13 @@ resource "confluent_api_key" "sduff-example-cluster-kafka-api-key" {
 }
 
 # Create a topic in this cluster
-resource "confluent_kafka_topic" "sduff-std-cluster-topic-ironman" {
+resource "confluent_kafka_topic" "sduff-example-topic {
   kafka_cluster {
-    id = confluent_kafka_cluster.sduff-std-cluster.id
+    id = confluent_kafka_cluster.sduff-example-cluster.id
   }
 
   topic_name    = "sduff-ironman"
-  rest_endpoint = confluent_kafka_cluster.sduff-std-cluster.rest_endpoint
+  rest_endpoint = confluent_kafka_cluster.sduff-example-cluster.rest_endpoint
   credentials {
     key    = confluent_api_key.sduff-example-cluster-kafka-api-key.id
     secret = confluent_api_key.sduff-example-cluster-kafka-api-key.secret

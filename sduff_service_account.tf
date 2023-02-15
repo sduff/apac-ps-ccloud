@@ -1,7 +1,7 @@
 # Create a service account and give it RBAC
 
 # Create Service Account
-resource "confluent_service_account" "sduff-svc-acct" {
+resource "confluent_service_account" "sduff_svc_acct" {
   display_name = "sduff-svc-acct"
   description  = "sduff service account for example purposes"
 }
@@ -12,21 +12,21 @@ resource "confluent_service_account" "sduff-svc-acct" {
 
 # Producer - DeveloperWrite
 resource "confluent_role_binding" "sduff-example-topic-devread" {
-  principal   = "User:${confluent_service_account.sduff-svc-acct.id}"
+  principal   = "User:${confluent_service_account.sduff_svc_acct.id}"
   role_name   = "DeveloperWrite"
   crn_pattern = "${confluent_kafka_cluster.sduff-example-cluster.rbac_crn}/kafka=${confluent_kafka_cluster.sduff-example-cluster.id}/topic=${confluent_kafka_topic.sduff-example-topic.topic_name}"
 }
 
 # Consumer - DeveloperRead to Topic
 resource "confluent_role_binding" "sduff-example-topic-devwrite" {
-  principal   = "User:${confluent_service_account.sduff-svc-acct.id}"
+  principal   = "User:${confluent_service_account.sduff_svc_acct.id}"
   role_name   = "DeveloperWrite"
   crn_pattern = "${confluent_kafka_cluster.sduff-example-cluster.rbac_crn}/kafka=${confluent_kafka_cluster.sduff-example-cluster.id}/topic=${confluent_kafka_topic.sduff-example-topic.topic_name}"
 }
 
 # Consumer - Consumer Group Write
 resource "confluent_role_binding" "sduff-example-topic-devwrite-consumergroup" {
-  principal   = "User:${confluent_service_account.sduff-svc-acct.id}"
+  principal   = "User:${confluent_service_account.sduff_svc_acct.id}"
   role_name   = "DeveloperWrite"
   crn_pattern = "${confluent_kafka_cluster.sduff-example-cluster.rbac_crn}/kafka=${confluent_kafka_cluster.sduff-example-cluster.id}/group=*"
 }
@@ -36,9 +36,9 @@ resource "confluent_api_key" "sduff-svc-acct-api-key" {
   display_name = "sduff-svc-acct-api-key"
   description  = "sduff Service Account API Key"
   owner {
-    id          = confluent_service_account.sduff-svc-acct.id
-    api_version = confluent_service_account.sduff-svc-acct.api_version
-    kind        = confluent_service_account.sduff-svc-acct.kind
+    id          = confluent_service_account.sduff_svc_acct.id
+    api_version = confluent_service_account.sduff_svc_acct.api_version
+    kind        = confluent_service_account.sduff_svc_acct.kind
   }
 
   managed_resource {
