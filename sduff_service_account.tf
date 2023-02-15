@@ -25,17 +25,11 @@ resource "confluent_role_binding" "sduff-example-topic-devwrite" {
 }
 
 # Consumer - Consumer Group Read
+# This is all that is required to utilise Consumer Groups
 resource "confluent_role_binding" "sduff-example-topic-devread-consumergroup" {
   principal   = "User:${confluent_service_account.sduff_svc_acct.id}"
   role_name   = "DeveloperRead"
   crn_pattern = "${confluent_kafka_cluster.sduff-example-cluster.rbac_crn}/kafka=${confluent_kafka_cluster.sduff-example-cluster.id}/group=*"
-}
-
-# Consumer - Consumer Group Write
-resource "confluent_role_binding" "sduff-example-topic-devwrite-consumergroup" {
-  principal   = "User:${confluent_service_account.sduff_svc_acct.id}"
-  role_name   = "DeveloperWrite"
-  crn_pattern = "${confluent_kafka_cluster.sduff-example-cluster.rbac_crn}/kafka=${confluent_kafka_cluster.sduff-example-cluster.id}/group=confluent_cli_consumer_*"
 }
 
 # Create an API Key for this service account
