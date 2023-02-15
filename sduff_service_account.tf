@@ -60,7 +60,7 @@ resource "confluent_api_key" "sduff-svc-acct-api-key" {
 # Refer to sduff_azure_keyvault.tf
 resource "azurerm_key_vault_secret" "azure_keyvault_sduff_svc_acct_api_key_secret" {
   name         = confluent_service_account.sduff_svc_acct.display_name
-  value        = "${confluent_api_key.sduff_svc_acct_api_key.id}:${confluent_api_key.sduff_svc_acct_api_key.secret}"
+  value        = "${confluent_api_key.sduff-svc-acct-api-key.id}:${confluent_api_key.sduff-svc-acct-api-key.secret}"
   key_vault_id = azurerm_key_vault.keyvault.id
   depends_on   = [azurerm_key_vault.keyvault]
 }
