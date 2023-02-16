@@ -9,6 +9,11 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 3.0.2"
     }
+
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 4.0"
+    }
   }
 }
 
@@ -32,6 +37,9 @@ provider "confluent" {
 
 provider "azurerm" {
   features {}
+}
+
+provider "aws" {
 }
 
 resource "confluent_environment" "shared-env" {
