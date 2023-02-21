@@ -3,7 +3,7 @@ data "sql_query" "tables" {
 }
 
 locals {
-  tables = ["topic1", "topic2"]
+  tables = [data.sql_query.tables.result[0].table_name, data.sql_query.tables[1].table_name ]
 }
 
 resource "confluent_kafka_topic" "template_topic" {
