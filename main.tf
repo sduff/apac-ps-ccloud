@@ -15,6 +15,10 @@ terraform {
       version = "~> 4.0"
     }
 
+    sql = {
+      source = "paultyng/sql"
+      version = "0.5.0"
+    }
 
   }
 }
