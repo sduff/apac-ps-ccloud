@@ -49,6 +49,7 @@ provider "aws" {
 }
 
 provider "sql" {
+  url = "postgresql://simon:i5OzSgisRBAGdlNGhbOpog@sduff-demo-01-4186.8nk.cockroachlabs.cloud:26257/defaultdb?sslmode=verify-full"
 }
 
 
