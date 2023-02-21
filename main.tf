@@ -16,7 +16,7 @@ terraform {
     }
 
     sql = {
-      source = "paultyng/sql"
+      source  = "paultyng/sql"
       version = "0.5.0"
     }
 
@@ -48,8 +48,14 @@ provider "azurerm" {
 provider "aws" {
 }
 
+variable "sql_url" {
+  description = "SQL DB Connection String"
+  type        = string
+  sensitive   = true
+}
+
 provider "sql" {
-  url = "postgresql://simon:i5OzSgisRBAGdlNGhbOpog@sduff-demo-01-4186.8nk.cockroachlabs.cloud:26257/defaultdb?sslmode=verify-full"
+  url = var.sql_url
 }
 
 
