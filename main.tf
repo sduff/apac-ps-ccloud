@@ -14,6 +14,12 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 4.0"
     }
+
+    sql = {
+      source = "paultyng/sql"
+      version = "0.5.0"
+    }
+
   }
 }
 
@@ -42,6 +48,11 @@ provider "azurerm" {
 provider "aws" {
 }
 
+provider "sql" {
+  url = "postgresql://simon:i5OzSgisRBAGdlNGhbOpog@sduff-demo-01-4186.8nk.cockroachlabs.cloud:26257/defaultdb?sslmode=verify-full"
+}
+
+
 resource "confluent_environment" "shared-env" {
   display_name = "Terraform-Environment"
 }
@@ -50,3 +61,4 @@ resource "confluent_environment" "shared-env" {
 data "confluent_service_account" "terraform_sa" {
   display_name = "terraform_sa"
 }
+
