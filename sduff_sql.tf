@@ -3,7 +3,7 @@ data "sql_query" "tables" {
 }
 
 locals {
-  tables = toset([for each row in  data.sql_query.tables.result : each.table_name ])
+  tables = toset([for each in data.sql_query.tables.result : each.table_name])
 }
 
 resource "confluent_kafka_topic" "template_topic" {
