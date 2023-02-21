@@ -3,11 +3,11 @@ data "sql_query" "tables" {
 }
 
 locals {
-  tables = [data.sql_query.tables.result[0].table_name, data.sql_query.tables[1].table_name ]
+  tables = toset([for each row in  data.sql_query.tables.result : each.table_name ])
 }
 
 resource "confluent_kafka_topic" "template_topic" {
-  for_each   = toset(local.tables)
+  for_each   = local.tables
   topic_name = each.value
 
   kafka_cluster {
