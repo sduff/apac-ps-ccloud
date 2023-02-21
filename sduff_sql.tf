@@ -21,8 +21,4 @@ resource "confluent_kafka_topic" "template_topic" {
     secret = confluent_api_key.sduff-example-cluster-kafka-api-key.secret
   }
 
-  lifecycle {
-    prevent_destroy = true
-  }
-
 }
