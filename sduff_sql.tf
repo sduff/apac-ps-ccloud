@@ -7,7 +7,7 @@ locals {
 }
 
 resource "confluent_kafka_topic" "template_topic" {
-  for_each   = toset(locals.tables)
+  for_each   = toset(local.tables)
   topic_name = each.value
 
   kafka_cluster {
