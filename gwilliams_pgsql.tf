@@ -17,7 +17,13 @@ provider "sql" {
 # SQL data extraction
 #
 data "sql_query" "gwilliams_sql_topics" {
-  query = "SELECT * FROM confluent_cloud.topics"
+  # its impossible to dynamically set the lifecycle.prevent_destroy meta argument with the DSL:
+  # https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#literal-values-only
+  #
+  # If dynamic lifecycle tagging is required we can filter prevent_destroy=true vs prevent_destroy=false
+  # and have each dataset be managed by a different terraform resource.
+  }
+  query = "SELECT * FROM confluent_cloud.topics WHERE prevent_destroy = true"
   provider = sql.gwilliams_sql
 }
 
@@ -97,7 +103,7 @@ resource "confluent_kafka_topic" "gwilliams-topics" {
   }
 
   lifecycle {
-    prevent_destroy = each.value.prevent_destroy
+    prevent_destroy = true
   }
 }
 
