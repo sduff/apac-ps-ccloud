@@ -14,6 +14,13 @@ data "sql_query" "gwilliams_sql_topics" {
   provider = sql.gwilliams_sql
 }
 
+locals {
+  topics_map = { 
+    for row in data.sql_query.gwilliams_sql_topics.result:
+    row.name => row
+  }
+
+}
 
 resource "confluent_kafka_cluster" "gwilliams-cluster" {
   display_name = "gwilliams-pgsql-test"
@@ -37,9 +44,10 @@ resource "confluent_kafka_topic" "gwilliams-topics" {
     id = confluent_kafka_cluster.gwilliams-cluster.id
   }
 
-  for_each = toset(data.sql_query.gwilliams_sql_topics.result)
+  for_each = topics_map
 
-  topic_name = each.value.name
+  topic_name = each.key
+  # todo json from each.value
 
   lifecycle {
     prevent_destroy = true
