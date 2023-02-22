@@ -10,7 +10,7 @@ provider "sql" {
 }
 
 data "sql_query" "gwilliams_sql_topics" {
-  query = "select name from topics"
+  query = "SELECT name FROM topics"
   provider = sql.gwilliams_sql
 }
 
@@ -37,7 +37,7 @@ resource "confluent_kafka_topic" "gwilliams-topics" {
     id = confluent_kafka_cluster.gwilliams-cluster.id
   }
 
-  for_each = data.sql_query.gwilliams_sql_topics.result
+  for_each = toset(data.sql_query.gwilliams_sql_topics.result)
 
   topic_name = each.value.name
 
