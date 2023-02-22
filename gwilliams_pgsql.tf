@@ -11,6 +11,7 @@ provider "sql" {
 
 data "sql_query" "gwilliams_sql_topics" {
   query = "select name from topics"
+  provider = sql.gwilliams_sql
 }
 
 
