@@ -10,14 +10,14 @@ provider "sql" {
 }
 
 data "sql_query" "gwilliams_sql_topics" {
-  query = "SELECT name FROM topics"
+  query = "SELECT * FROM confluent_cloud.topics"
   provider = sql.gwilliams_sql
 }
 
 locals {
   topics_map = { 
     for row in data.sql_query.gwilliams_sql_topics.result:
-    row.name => row
+      row.key => row
   }
 
 }
@@ -71,7 +71,8 @@ resource "confluent_kafka_topic" "gwilliams-topics" {
   for_each = local.topics_map
 
   topic_name = each.key
-  # todo json from each.value
+  partitions_count = each.value.partitions_count
+  config = each.value.config
 
   rest_endpoint = confluent_kafka_cluster.gwilliams-cluster.rest_endpoint
   credentials {
