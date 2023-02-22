@@ -1,3 +1,6 @@
+#
+# SQL connection setup
+#
 variable "gwilliams_postgres_url" {
   description = "SQL DB Connection String"
   type        = string
@@ -9,11 +12,17 @@ provider "sql" {
   url = var.gwilliams_postgres_url
 }
 
+
+#
+# SQL data extraction
+#
 data "sql_query" "gwilliams_sql_topics" {
   query = "SELECT * FROM confluent_cloud.topics"
   provider = sql.gwilliams_sql
 }
 
+
+# [key, partitions_count, config, prevent_destroy] => {key => {key: 'foo', parititions_count: 5, config: '{"baz": "bas"}', prevent_destroy: true}}
 locals {
   topics_map = { 
     for row in data.sql_query.gwilliams_sql_topics.result:
@@ -22,6 +31,9 @@ locals {
 
 }
 
+#
+# Boilerplate cluster setup
+#
 resource "confluent_kafka_cluster" "gwilliams-cluster" {
   display_name = "gwilliams-pgsql-test"
   availability = "SINGLE_ZONE"
@@ -62,7 +74,9 @@ resource "confluent_api_key" "gwilliams-cluster-kafka-api-key" {
   }
 }
 
-
+#
+# Dynamic topics from database
+#
 resource "confluent_kafka_topic" "gwilliams-topics" {
   kafka_cluster {
     id = confluent_kafka_cluster.gwilliams-cluster.id
@@ -82,9 +96,8 @@ resource "confluent_kafka_topic" "gwilliams-topics" {
     secret = confluent_api_key.gwilliams-cluster-kafka-api-key.secret
   }
 
-  # allow deletes
-  # lifecycle {
-  #   prevent_destroy = true
-  # }
+  lifecycle {
+    prevent_destroy = each.value.prevent_destroy
+  }
 }
 
