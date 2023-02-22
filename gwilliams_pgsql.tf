@@ -49,6 +49,8 @@ resource "confluent_kafka_topic" "gwilliams-topics" {
   topic_name = each.key
   # todo json from each.value
 
+  rest_endpoint = confluent_kafka_cluster.gwilliams-cluster.rest_endpoint
+
   lifecycle {
     prevent_destroy = true
   }
