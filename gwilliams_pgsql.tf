@@ -79,8 +79,9 @@ resource "confluent_kafka_topic" "gwilliams-topics" {
     secret = confluent_api_key.gwilliams-cluster-kafka-api-key.secret
   }
 
-  lifecycle {
-    prevent_destroy = true
-  }
+  # allow deletes
+  # lifecycle {
+  #   prevent_destroy = true
+  # }
 }
 
