@@ -44,7 +44,7 @@ resource "confluent_kafka_topic" "gwilliams-topics" {
     id = confluent_kafka_cluster.gwilliams-cluster.id
   }
 
-  for_each = topics_map
+  for_each = local.topics_map
 
   topic_name = each.key
   # todo json from each.value
