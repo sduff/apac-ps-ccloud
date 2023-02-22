@@ -72,7 +72,9 @@ resource "confluent_kafka_topic" "gwilliams-topics" {
 
   topic_name = each.key
   partitions_count = each.value.partitions_count
-  config = each.value.config
+  
+  # JSON column type is returned as string for the moment: https://github.com/paultyng/terraform-provider-sql/issues/6
+  config = jsondecode(each.value.config)
 
   rest_endpoint = confluent_kafka_cluster.gwilliams-cluster.rest_endpoint
   credentials {
