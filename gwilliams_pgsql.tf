@@ -22,7 +22,7 @@ data "sql_query" "gwilliams_sql_topics" {
   #
   # If dynamic lifecycle tagging is required we can filter prevent_destroy=true vs prevent_destroy=false
   # and have each dataset be managed by a different terraform resource.
-  query = "SELECT * FROM confluent_cloud.topics WHERE prevent_destroy = true"
+  query = "SELECT * FROM confluent_cloud.topicsme WHERE prevent_destroy = true"
   provider = sql.gwilliams_sql
 }
 
