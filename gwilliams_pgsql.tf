@@ -38,6 +38,30 @@ resource "confluent_kafka_cluster" "gwilliams-cluster" {
   }
 }
 
+resource "confluent_api_key" "gwilliams-cluster-kafka-api-key" {
+  display_name = "gwilliams-cluster-kafka-api-key"
+  description  = "gwilliams Cluster Kafka API Key"
+  owner {
+    id          = data.confluent_service_account.terraform_sa.id
+    api_version = data.confluent_service_account.terraform_sa.api_version
+    kind        = data.confluent_service_account.terraform_sa.kind
+  }
+
+  managed_resource {
+    id          = confluent_kafka_cluster.gwilliams-cluster.id
+    api_version = confluent_kafka_cluster.gwilliams-cluster.api_version
+    kind        = confluent_kafka_cluster.gwilliams-cluster.kind
+
+    environment {
+      id = confluent_environment.shared-env.id
+    }
+  }
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
 
 resource "confluent_kafka_topic" "gwilliams-topics" {
   kafka_cluster {
@@ -50,6 +74,10 @@ resource "confluent_kafka_topic" "gwilliams-topics" {
   # todo json from each.value
 
   rest_endpoint = confluent_kafka_cluster.gwilliams-cluster.rest_endpoint
+  credentials {
+    key    = confluent_api_key.gwilliams-cluster-kafka-api-key.id
+    secret = confluent_api_key.gwilliams-cluster-kafka-api-key.secret
+  }
 
   lifecycle {
     prevent_destroy = true
