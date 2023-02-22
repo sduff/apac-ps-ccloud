@@ -11,6 +11,8 @@ Examples of managing [Confluent Cloud](https://confluent.cloud) via the [Conflue
 5. Make a Pull Request from your changes. This will trigger a `terraform plan` run in Terraform Cloud. Note this is only a `plan` not an `apply`
 6. If no errors, merge your PR and press the button to delete the original branch. You should see your new resources appear in confluent cloud like magic 😎
 
+To delete resources, just delete them from your `.tf` file or delete the `.tf` file. After merging your changes the Confluent Cloud resources will be gone.
+
 # Troubleshooting/logs/CI config
 
 [https://app.terraform.io](https://app.terraform.io)
