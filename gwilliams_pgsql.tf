@@ -44,12 +44,39 @@ data "sql_query" "gwilliams_sql_topics" {
   provider = sql.gwilliams_sql
 }
 
+data "sql_query" "gwilliams_sql_connectors" {
+  # its impossible to dynamically set the lifecycle.prevent_destroy meta argument with the DSL:
+  # https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#literal-values-only
+  #
+  # If dynamic lifecycle tagging is required we can filter prevent_destroy=true vs prevent_destroy=false
+  # and have each dataset be managed by a different terraform resource.
+  query = "SELECT * FROM confluent_cloud.connectors WHERE prevent_destroy = true"
+  provider = sql.gwilliams_sql
+}
 
-# [key, partitions_count, config, prevent_destroy] => {key => {key: 'foo', parititions_count: 5, config: '{"baz": "bas"}', prevent_destroy: true}}
+
+
 locals {
+  
+  # topics
+  # ------
+  # trasform [key, partitions_count, config, prevent_destroy]
+  # to {key => {key: 'foo', parititions_count: 5, config: '{"baz": "bas"}', prevent_destroy: true}}
   topics_map = { 
     for row in data.sql_query.gwilliams_sql_topics.result:
       row.key => row
+  }
+
+  # trasform [key, config_sensitive, config_nonsensitive, prevent_destroy]
+  # to {key => {key: 'foo', config_sensitive: '{}', config_nonsensitive: '{}', prevent_destroy: true}}
+  connectors_map = { 
+    for row in data.sql_query.gwilliams_sql_topics.result:
+      row.key => row
+  }
+
+  # default nonsensitive configs for all containers - could also be sourced from another table
+  config_nonsensitive_defaults = {
+    "kafka.service.account.id": confluent_service_account.app-connector.id
   }
 
 }
@@ -112,10 +139,6 @@ resource "confluent_role_binding" "gwilliams_svc_acct-DeveloperWrite" {
  crn_pattern = "${confluent_kafka_cluster.gwilliams-cluster.rbac_crn}/kafka=${confluent_kafka_cluster.gwilliams-cluster.id}/topic=*"
 }
 
-output "debug_role_binding" {
-  value = "${confluent_kafka_cluster.gwilliams-cluster.rbac_crn}/kafka=${confluent_kafka_cluster.gwilliams-cluster.id}/topic=*"
-}
-
 #
 # Dynamic topics from database
 #
@@ -154,18 +177,10 @@ resource "confluent_connector" "gwilliams-connectors" {
     id = confluent_kafka_cluster.gwilliams-cluster.id
   }
 
-  config_sensitive = {}
+  for_each = local.connectors_map
 
-  config_nonsensitive = {
-    "connector.class"          = "DatagenSource"
-    "name"                     = "DatagenSourceConnector_geofftest"
-    "kafka.auth.mode"          = "SERVICE_ACCOUNT"
-    "kafka.service.account.id" = confluent_service_account.gwilliams_svc_acct.id
-    "kafka.topic"              = "inventory"
-    "output.data.format"       = "JSON"
-    "quickstart"               = "PRODUCT"
-    "tasks.max"                = "1"
-  }
+  config_sensitive = decode_json(each.value.config_sensitive)
+  config_nonsensitive = merge(local.config_nonsensitive_defaults, decode_json(each.value.config_nonsensitive))
 
   # depends_on = [
   #   confluent_kafka_acl.app-connector-describe-on-cluster,
