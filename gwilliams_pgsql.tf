@@ -146,35 +146,35 @@ resource "confluent_kafka_topic" "gwilliams-topics" {
 #
 # Kafka Connect: Source Connector
 #
-resource "confluent_connector" "gwilliams-connectors" {
-  environment {
-    id = confluent_environment.shared-env.id
-  }
-  kafka_cluster {
-    id = confluent_kafka_cluster.gwilliams-cluster.id
-  }
+# resource "confluent_connector" "gwilliams-connectors" {
+#   environment {
+#     id = confluent_environment.shared-env.id
+#   }
+#   kafka_cluster {
+#     id = confluent_kafka_cluster.gwilliams-cluster.id
+#   }
 
-  config_sensitive = {}
+#   config_sensitive = {}
 
-  config_nonsensitive = {
-    "connector.class"          = "DatagenSource"
-    "name"                     = "DatagenSourceConnector_geofftest"
-    "kafka.auth.mode"          = "SERVICE_ACCOUNT"
-    "kafka.service.account.id" = confluent_service_account.gwilliams_svc_acct.id
-    "kafka.topic"              = "inventory"
-    "output.data.format"       = "JSON"
-    "quickstart"               = "PRODUCT"
-    "tasks.max"                = "1"
-  }
+#   config_nonsensitive = {
+#     "connector.class"          = "DatagenSource"
+#     "name"                     = "DatagenSourceConnector_geofftest"
+#     "kafka.auth.mode"          = "SERVICE_ACCOUNT"
+#     "kafka.service.account.id" = confluent_service_account.gwilliams_svc_acct.id
+#     "kafka.topic"              = "inventory"
+#     "output.data.format"       = "JSON"
+#     "quickstart"               = "PRODUCT"
+#     "tasks.max"                = "1"
+#   }
 
-  # depends_on = [
-  #   confluent_kafka_acl.app-connector-describe-on-cluster,
-  #   confluent_kafka_acl.app-connector-write-on-target-topic,
-  #   confluent_kafka_acl.app-connector-create-on-data-preview-topics,
-  #   confluent_kafka_acl.app-connector-write-on-data-preview-topics,
-  # ]
+#   # depends_on = [
+#   #   confluent_kafka_acl.app-connector-describe-on-cluster,
+#   #   confluent_kafka_acl.app-connector-write-on-target-topic,
+#   #   confluent_kafka_acl.app-connector-create-on-data-preview-topics,
+#   #   confluent_kafka_acl.app-connector-write-on-data-preview-topics,
+#   # ]
 
-  # lifecycle {
-  #   prevent_destroy = true
-  # }
-}
+#   # lifecycle {
+#   #   prevent_destroy = true
+#   # }
+# }
