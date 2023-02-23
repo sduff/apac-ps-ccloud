@@ -62,7 +62,9 @@ resource "confluent_kafka_cluster" "gwilliams-cluster" {
   availability = "SINGLE_ZONE"
   cloud        = "AWS"
   region       = "ap-southeast-2"
-  basic {}
+  
+  # required for RBAC
+  standard {}
 
   environment {
     id = confluent_environment.shared-env.id
