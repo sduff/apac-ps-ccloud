@@ -1,3 +1,11 @@
+# =============================================================================
+# Example of how to manage confluent cloud resources with PostgreSQL
+# =============================================================================
+
+
+#
+# SQL connection setup
+#
 variable "gwilliams_postgres_url" {
   description = "SQL DB Connection String"
   type        = string
@@ -9,19 +17,33 @@ provider "sql" {
   url = var.gwilliams_postgres_url
 }
 
+
+#
+# SQL data extraction
+#
 data "sql_query" "gwilliams_sql_topics" {
-  query = "SELECT name FROM topics"
+  # its impossible to dynamically set the lifecycle.prevent_destroy meta argument with the DSL:
+  # https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#literal-values-only
+  #
+  # If dynamic lifecycle tagging is required we can filter prevent_destroy=true vs prevent_destroy=false
+  # and have each dataset be managed by a different terraform resource.
+  query = "SELECT * FROM confluent_cloud.topics WHERE prevent_destroy = true"
   provider = sql.gwilliams_sql
 }
 
+
+# [key, partitions_count, config, prevent_destroy] => {key => {key: 'foo', parititions_count: 5, config: '{"baz": "bas"}', prevent_destroy: true}}
 locals {
   topics_map = { 
     for row in data.sql_query.gwilliams_sql_topics.result:
-    row.name => row
+      row.key => row
   }
 
 }
 
+#
+# Boilerplate cluster setup
+#
 resource "confluent_kafka_cluster" "gwilliams-cluster" {
   display_name = "gwilliams-pgsql-test"
   availability = "SINGLE_ZONE"
@@ -62,7 +84,9 @@ resource "confluent_api_key" "gwilliams-cluster-kafka-api-key" {
   }
 }
 
-
+#
+# Dynamic topics from database
+#
 resource "confluent_kafka_topic" "gwilliams-topics" {
   kafka_cluster {
     id = confluent_kafka_cluster.gwilliams-cluster.id
@@ -71,7 +95,10 @@ resource "confluent_kafka_topic" "gwilliams-topics" {
   for_each = local.topics_map
 
   topic_name = each.key
-  # todo json from each.value
+  partitions_count = each.value.partitions_count
+  
+  # JSON column type is returned as string for the moment: https://github.com/paultyng/terraform-provider-sql/issues/6
+  config = jsondecode(each.value.config)
 
   rest_endpoint = confluent_kafka_cluster.gwilliams-cluster.rest_endpoint
   credentials {
@@ -79,9 +106,8 @@ resource "confluent_kafka_topic" "gwilliams-topics" {
     secret = confluent_api_key.gwilliams-cluster-kafka-api-key.secret
   }
 
-  # allow deletes
-  # lifecycle {
-  #   prevent_destroy = true
-  # }
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
