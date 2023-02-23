@@ -40,11 +40,6 @@ locals {
     for row in data.sql_query.gwilliams_sql_connectors.result:
       row.key => row
   }
-
-  # default nonsensitive configs for all containers - could also be sourced from another table <<== todo
-  config_nonsensitive_defaults = {
-    "kafka.service.account.id": confluent_service_account.gwilliams_svc_acct.id
-  }
 }
 
 
@@ -62,7 +57,7 @@ resource "confluent_connector" "gwilliams-connectors" {
   for_each = local.connectors_map
 
   config_sensitive = jsondecode(each.value.config_sensitive)
-  config_nonsensitive = merge(local.config_nonsensitive_defaults, jsondecode(each.value.config_nonsensitive))
+  config_nonsensitive = jsondecode(each.value.config_nonsensitive)
 
   # depends_on = [
   #   confluent_kafka_acl.app-connector-describe-on-cluster,
