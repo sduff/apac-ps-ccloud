@@ -10,9 +10,11 @@
 #   * create topics 1:1 database rows
 #   * topics are protected from deletion
 #   * partitions, config specified in database
+#   * partitions can be increased in db, some config settings can be changed in db (eg retentions.ms)
 # caveats (as expected with confluent cloud):
 #   * partitions can only be increased
-#   * some config settings require topic be deleted and recreated
+#   * some config settings require topic be deleted and recreated - you can delete the topic in the cloud console to
+#     force this to happen when you have `prevent_destroy=true` set in terraform
 
 #
 # SQL connection setup
@@ -95,6 +97,12 @@ resource "confluent_api_key" "gwilliams-cluster-kafka-api-key" {
   }
 }
 
+# Create Service Account
+resource "confluent_service_account" "gwilliams_svc_acct" {
+  display_name = "gwilliams-svc-acct"
+  description  = "gwilliams service account for example purposes"
+}
+
 #
 # Dynamic topics from database
 #
@@ -122,3 +130,38 @@ resource "confluent_kafka_topic" "gwilliams-topics" {
   }
 }
 
+#
+# Kafka Connect: Source Connector
+#
+resource "confluent_connector" "source" {
+  environment {
+    id = confluent_environment.shared-env.id
+  }
+  kafka_cluster {
+    id = confluent_kafka_cluster.gwilliams-cluster.id
+  }
+
+  config_sensitive = {}
+
+  config_nonsensitive = {
+    "connector.class"          = "DatagenSource"
+    "name"                     = "DatagenSourceConnector_geofftest"
+    "kafka.auth.mode"          = "SERVICE_ACCOUNT"
+    "kafka.service.account.id" = confluent_service_account.gwilliams_svc_acct.id
+    "kafka.topic"              = "inventory"
+    "output.data.format"       = "JSON"
+    "quickstart"               = "PRODUCT"
+    "tasks.max"                = "1"
+  }
+
+  # depends_on = [
+  #   confluent_kafka_acl.app-connector-describe-on-cluster,
+  #   confluent_kafka_acl.app-connector-write-on-target-topic,
+  #   confluent_kafka_acl.app-connector-create-on-data-preview-topics,
+  #   confluent_kafka_acl.app-connector-write-on-data-preview-topics,
+  # ]
+
+  # lifecycle {
+  #   prevent_destroy = true
+  # }
+}
