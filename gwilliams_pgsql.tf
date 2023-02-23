@@ -76,7 +76,7 @@ locals {
 
   # default nonsensitive configs for all containers - could also be sourced from another table
   config_nonsensitive_defaults = {
-    "kafka.service.account.id": confluent_service_account.app-connector.id
+    "kafka.service.account.id": confluent_service_account.gwilliams_svc_acct.id
   }
 
 }
