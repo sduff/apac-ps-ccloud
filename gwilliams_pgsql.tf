@@ -103,6 +103,14 @@ resource "confluent_service_account" "gwilliams_svc_acct" {
   description  = "gwilliams service account for example purposes"
 }
 
+# Access to all my topics
+resource "confluent_role_binding" "gwilliams_svc_acct-DeveloperWrite" {
+  principal   = "User:${confluent_service_account.gwilliams_svc_acct.id}"
+  role_name   = "DeveloperWrite"
+  crn_pattern = "${confluent_kafka_cluster.gwilliams-cluster.rbac_crn}/kafka=${confluent_kafka_cluster.gwilliams-cluster.id}/topic=*}"
+}
+
+
 #
 # Dynamic topics from database
 #
