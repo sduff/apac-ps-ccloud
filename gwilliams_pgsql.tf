@@ -2,6 +2,17 @@
 # Example of how to manage confluent cloud resources with PostgreSQL
 # =============================================================================
 
+#
+# Confluent Cloud Topics
+# ----------------------
+#
+# features:
+#   * create topics 1:1 database rows
+#   * topics are protected from deletion
+#   * partitions, config specified in database
+# caveats (as expected with confluent cloud):
+#   * partitions can only be increased
+#   * some config settings require topic be deleted and recreated
 
 #
 # SQL connection setup
