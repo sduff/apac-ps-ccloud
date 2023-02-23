@@ -143,7 +143,7 @@ resource "confluent_kafka_topic" "gwilliams-topics" {
 #
 # Kafka Connect: Source Connector
 #
-resource "confluent_connector" "source" {
+resource "confluent_connector" "gwilliams-connectors" {
   environment {
     id = confluent_environment.shared-env.id
   }
