@@ -41,12 +41,6 @@ locals {
     for row in data.sql_query.gwilliams_sql_topics.result:
       row.key => row
   }
-
-  # default nonsensitive configs for all containers - could also be sourced from another table
-  config_nonsensitive_defaults = {
-    "kafka.service.account.id": confluent_service_account.gwilliams_svc_acct.id
-  }
-
 }
 
 
