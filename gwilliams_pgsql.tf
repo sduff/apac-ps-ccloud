@@ -70,7 +70,7 @@ locals {
   # trasform [key, config_sensitive, config_nonsensitive, prevent_destroy]
   # to {key => {key: 'foo', config_sensitive: '{}', config_nonsensitive: '{}', prevent_destroy: true}}
   connectors_map = { 
-    for row in data.sql_query.gwilliams_sql_topics.result:
+    for row in data.sql_query.gwilliams_sql_connectors.result:
       row.key => row
   }
 
@@ -167,7 +167,7 @@ resource "confluent_kafka_topic" "gwilliams-topics" {
 }
 
 #
-# Kafka Connect: Source Connector
+# Connectors 
 #
 resource "confluent_connector" "gwilliams-connectors" {
   environment {
