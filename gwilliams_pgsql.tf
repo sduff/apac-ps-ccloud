@@ -106,14 +106,14 @@ resource "confluent_service_account" "gwilliams_svc_acct" {
 }
 
 # Access to all my topics
-#resource "confluent_role_binding" "gwilliams_svc_acct-DeveloperWrite" {
-#  principal   = "User:${confluent_service_account.gwilliams_svc_acct.id}"
-#  role_name   = "DeveloperWrite"
-#  crn_pattern = "${confluent_kafka_cluster.gwilliams-cluster.rbac_crn}/kafka=${confluent_kafka_cluster.gwilliams-cluster.id}/topic=*}"
-#}
+resource "confluent_role_binding" "gwilliams_svc_acct-DeveloperWrite" {
+ principal   = "User:${confluent_service_account.gwilliams_svc_acct.id}"
+ role_name   = "DeveloperWrite"
+ crn_pattern = "${confluent_kafka_cluster.gwilliams-cluster.rbac_crn}/kafka=${confluent_kafka_cluster.gwilliams-cluster.id}/topic=*"
+}
 
 output "debug_role_binding" {
-  value = "${confluent_kafka_cluster.gwilliams-cluster.rbac_crn}/kafka=${confluent_kafka_cluster.gwilliams-cluster.id}/topic=*}"
+  value = "${confluent_kafka_cluster.gwilliams-cluster.rbac_crn}/kafka=${confluent_kafka_cluster.gwilliams-cluster.id}/topic=*"
 }
 
 #
