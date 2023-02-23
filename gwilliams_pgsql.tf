@@ -179,8 +179,8 @@ resource "confluent_connector" "gwilliams-connectors" {
 
   for_each = local.connectors_map
 
-  config_sensitive = decode_json(each.value.config_sensitive)
-  config_nonsensitive = merge(local.config_nonsensitive_defaults, decode_json(each.value.config_nonsensitive))
+  config_sensitive = jsondecode(each.value.config_sensitive)
+  config_nonsensitive = merge(local.config_nonsensitive_defaults, jsondecode(each.value.config_nonsensitive))
 
   # depends_on = [
   #   confluent_kafka_acl.app-connector-describe-on-cluster,
