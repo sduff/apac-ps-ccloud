@@ -73,7 +73,7 @@ data "vault_kv_secret_v2" "confluent-cloud-postgresql" {
 #
 provider "sql" {
   alias = "gwilliams_sql"
-  url = data.vault_kv_secret_v2.confluent-cloud-postgresql.data_json.url
+  url = data.vault_kv_secret_v2.confluent-cloud-postgresql.data.url
 }
 
 
