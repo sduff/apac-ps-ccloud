@@ -42,12 +42,12 @@ provider "aws" {
 
 data "aws_secretsmanager_secret" "vault" {
   name = "vault" # As stored in the AWS Secrets Manager
-  provider = sql.gwilliams_aws
+  provider = aws.gwilliams_aws
 }
 
 data "aws_secretsmanager_secret_version" "vault" {
   secret_id = data.aws_secretsmanager_secret.vault.id
-  provider = sql.gwilliams_aws
+  provider = aws.gwilliams_aws
 }
 
 locals {
@@ -59,7 +59,7 @@ locals {
 #
 provider "vault" {
   address = local.vault_credentials.vault_url
-  token = vault_credentials.vault_token
+  token = local.vault_credentials.vault_token
   ca_cert_file = "./gwilliams/vault.ca"
 }
 
