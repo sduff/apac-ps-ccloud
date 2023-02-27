@@ -16,18 +16,64 @@
 #   * some config settings require topic be deleted and recreated - you can delete the topic in the cloud console to
 #     force this to happen when you have `prevent_destroy=true` set in terraform
 
-#
-# SQL connection setup
-#
-variable "gwilliams_postgres_url" {
-  description = "SQL DB Connection String"
+# 
+variable "terraform_ci_aws_access_key" {
+  description = "AWS access key for getting vault credentials"
   type        = string
   sensitive   = true
 }
 
+variable "terraform_ci_aws_secret_key" {
+  description = "AWS secret key for getting vault credentials"
+  type        = string
+  sensitive   = true
+}
+
+#
+# Secretsmanager access
+#
+
+provider "aws" {
+  alias = "gwilliams_aws"
+  region = "ap-southeast-2"
+  access_key = var.terraform_ci_aws_access_key
+  secret_key = var.terraform_ci_aws_secret_key
+}
+
+data "aws_secretsmanager_secret" "vault" {
+  name = "vault" # As stored in the AWS Secrets Manager
+  provider = sql.gwilliams_aws
+}
+
+data "aws_secretsmanager_secret_version" "vault" {
+  secret_id = data.aws_secretsmanager_secret.vault.id
+  provider = sql.gwilliams_aws
+}
+
+locals {
+  vault_credentials = jsondecode(data.aws_secretsmanager_secret_version.vault.secret_string)
+}
+
+#
+# Vault access
+#
+provider "vault" {
+  address = local.vault_credentials.vault_url
+  token = vault_credentials.vault_token
+  ca_cert_file = "./gwilliams/vault.ca"
+}
+
+data "vault_kv_secret_v2" "confluent-cloud-postgresql" {
+  mount = "secret"
+  name  = "confluent-cloud-postgresql"
+}
+
+#
+# SQL connection setup
+#
 provider "sql" {
   alias = "gwilliams_sql"
-  url = var.gwilliams_postgres_url
+  url = data.vault_kv_secret_v2.confluent-cloud-postgresql.url
 }
 
 
