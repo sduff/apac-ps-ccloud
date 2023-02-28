@@ -64,8 +64,8 @@ locals {
   # to {MySqlCdcSourceConnector_0 => {...}}
   # eg remove connector_config_sensitive prefix
   connector_config_sensitive = {
-    for secret in data.vault_kv_secret_v2.connector_config_sensitive:
-      trimprefix(secret.key, "connector_config_sensitive/") => secret.data
+    for k,v in data.vault_kv_secret_v2.connector_config_sensitive:
+      trimprefix(k, "connector_config_sensitive/") => v
   }
 }
 
