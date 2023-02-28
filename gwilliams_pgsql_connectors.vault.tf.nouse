@@ -31,36 +31,28 @@ data "sql_query" "gwilliams_sql_connectors" {
 }
 
 #
-# Secretsmanager secrets per connection
+# Vault secrets per connector
 #
 # This is used to populate the `config_sensitive` argument when defining a connector. There is no way in terraform
 # for a data lookup to be "optional" https://github.com/hashicorp/terraform/issues/16380
 #
-# The closest we can come to this is to list all avaiable secrets in AWS that match our special tag and then read 
-# only those into terraform. We can then coalesce an empty json object or the secret if present
+# The closest we can come to this is to list all avaiable secrets within a mount and then read only those into 
+# terraform. We can then coalesce an empty json object or the secret if present
 #
+# secrets MUST be named secret/connector_config_sensitive/<key of connector>
 
-# secrets MUST be named connector_config_sensitive/<key of connector>
-
-# read the names of secrets in secretsmanager that are tagged with our special tag (connector_config_sensitive=true)
-data "aws_secretsmanager_secrets" "secrets" {
-  filter {
-    name = "tag-key"
-    values = ["connector_config_sensitive"]
-  }
-  filter {
-    name   = "tag-value"
-    values = [true]
-  }
-  provider = aws.gwilliams_aws
+# read the names of secrets at /secret/connector_config_sensitive
+data "vault_kv_secrets_list_v2" "secrets" {
+ mount      = "secret"
+ name = "connector_config_sensitive"
 }
 
-
 # read each secret in /secret/connector_config_sensitive
-data "aws_secretsmanager_secret_version" "secrets" {
-  for_each = data.aws_secretsmanager_secrets.secrets.names
-  secret_id = each.key
-  provider = aws.gwilliams_aws
+data "vault_kv_secret_v2" "connector_config_sensitive" {
+  # must cast the list of secret names to be non-secret to allow it to be iterated with for_each
+  for_each = nonsensitive(toset(formatlist("connector_config_sensitive/%s", data.vault_kv_secrets_list_v2.secrets.names)))
+  mount = "secret"
+  name  = each.key
 }
 
 locals {
@@ -76,8 +68,8 @@ locals {
   # to {MySqlCdcSourceConnector_0 => {...}}
   # eg remove connector_config_sensitive prefix
   connector_config_sensitive = {
-    for k,v in data.aws_secretsmanager_secret_version.secrets:
-      trimprefix(k, "connector_config_sensitive/") => jsondecode(v.secret_string)
+    for k,v in data.vault_kv_secret_v2.connector_config_sensitive:
+      trimprefix(k, "connector_config_sensitive/") => v.data
   }
 }
 
