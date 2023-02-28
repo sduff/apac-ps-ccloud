@@ -59,6 +59,14 @@ locals {
     for row in data.sql_query.gwilliams_sql_connectors.result:
       row.key => row
   }
+
+  # transform {"connector_config_sensitive/MySqlCdcSourceConnector_0": {...}"}
+  # to {MySqlCdcSourceConnector_0 => {...}}
+  # eg remove connector_config_sensitive prefix
+  connector_config_sensitive = {
+    for secret in data.vault_kv_secret_v2.connector_config_sensitive:
+      trimprefix(secret.key, "connector_config_sensitive/") => secret.data
+  }
 }
 
 
@@ -75,7 +83,7 @@ resource "confluent_connector" "gwilliams-connectors" {
 
   for_each = local.connectors_map
 
-  config_sensitive = try(data.vault_kv_secret_v2.connector_config_sensitive[each.key].data, {})
+  config_sensitive = try(data.vault_kv_secret_v2.connector_config_sensitive[each.key], {})
   config_nonsensitive = jsondecode(each.value.config_nonsensitive)
 
   # depends_on = [
