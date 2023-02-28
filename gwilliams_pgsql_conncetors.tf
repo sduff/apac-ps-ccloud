@@ -65,7 +65,7 @@ locals {
   # eg remove connector_config_sensitive prefix
   connector_config_sensitive = {
     for k,v in data.vault_kv_secret_v2.connector_config_sensitive:
-      trimprefix(k, "connector_config_sensitive/") => v
+      trimprefix(k, "connector_config_sensitive/") => v.data
   }
 }
 
