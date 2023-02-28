@@ -30,7 +30,26 @@ data "sql_query" "gwilliams_sql_connectors" {
   provider = sql.gwilliams_sql
 }
 
+#
+# Vault secrets per connector
+#
+# This is used to populate the `config_sensitive` argument when defining a connector. There is no way in terraform
+# for a data lookup to be "optional" https://github.com/hashicorp/terraform/issues/16380
+#
+# The closest we can come to this is to list all avaiable secrets within a mount and then read only those into 
+# terraform. We can then coalesce an empty json object or the secret if present
+#
+data "vault_kv_secrets_list_v2" "secrets" {
+ mount      = "secret"
+ name = "connector_config_sensitive"
+}
 
+data "vault_kv_secret_v2" "connector_config_sensitive" {
+  # must cast the list of secret names to be non-secret to allow it to be iterated with for_each
+  for_each = nonsensitive(toset(formatlist("connector_config_sensitive/%s", data.vault_kv_secrets_list_v2.secrets.names)))
+  mount = "secret"
+  name  = each.key
+}
 
 locals {
   
@@ -56,7 +75,7 @@ resource "confluent_connector" "gwilliams-connectors" {
 
   for_each = local.connectors_map
 
-  config_sensitive = jsondecode(each.value.config_sensitive)
+  config_sensitive = try(data.vault_kv_secret_v2.connector_config_sensitive[each.key].data, {})
   config_nonsensitive = jsondecode(each.value.config_nonsensitive)
 
   # depends_on = [
