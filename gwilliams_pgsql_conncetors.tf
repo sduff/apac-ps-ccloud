@@ -46,7 +46,7 @@ data "vault_kv_secrets_list_v2" "secrets" {
 
 data "vault_kv_secret_v2" "connector_config_sensitive" {
   # must cast the list of secret names to be non-secret to allow it to be iterated with for_each
-  for_each = nonsensitive(toset(data.vault_kv_secrets_list_v2.secrets.names))
+  for_each = nonsensitive(toset(formatlist("connector_config_sensitive/%s", data.vault_kv_secrets_list_v2.secrets.names)))
   mount = "secret"
   name  = each.key
 }
