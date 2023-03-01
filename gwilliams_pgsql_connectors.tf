@@ -7,26 +7,27 @@
 # ----------------------
 #
 # features:
-#   * create topics 1:1 database rows
-#   * topics are protected from deletion
-#   * partitions, config specified in database
-#   * partitions can be increased in db, some config settings can be changed in db (eg retentions.ms)
-# caveats (as expected with confluent cloud):
-#   * partitions can only be increased
-#   * some config settings require topic be deleted and recreated - you can delete the topic in the cloud console to
-#     force this to happen when you have `prevent_destroy=true` set in terraform
+#   * create connectors 1:1 database rows
+#   * config_nonsensitive specified in database
+#   * config_sensitive read from secretserver
 
 
 #
 # SQL data extraction
 #
-data "sql_query" "gwilliams_sql_connectors" {
-  # its impossible to dynamically set the lifecycle.prevent_destroy meta argument with the DSL:
-  # https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#literal-values-only
-  #
-  # If dynamic lifecycle tagging is required we can filter prevent_destroy=true vs prevent_destroy=false
-  # and have each dataset be managed by a different terraform resource.
+
+# its impossible to dynamically set the lifecycle.prevent_destroy meta argument with the DSL:
+# https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#literal-values-only
+#
+# If dynamic lifecycle tagging is required we can filter prevent_destroy=true vs prevent_destroy=false
+# and have each dataset be managed by a different terraform resource.
+data "sql_query" "gwilliams_sql_confluent_cloud_connectors_prevent_destroy_true" {
   query = "SELECT * FROM confluent_cloud.connectors WHERE prevent_destroy = true and managed = true"
+  provider = sql.gwilliams_sql
+}
+
+data "sql_query" "gwilliams_sql_confluent_cloud_connectors_prevent_destroy_false" {
+  query = "SELECT * FROM confluent_cloud.connectors WHERE prevent_destroy = false and managed = true"
   provider = sql.gwilliams_sql
 }
 
@@ -40,13 +41,13 @@ data "sql_query" "gwilliams_sql_connectors" {
 # only those into terraform. We can then coalesce an empty json object or the secret if present
 #
 
-# secrets MUST be named connector_config_sensitive/<key of connector>
+# secrets MUST be named confluent_cloud_connector_config_sensitive/<key of connector>
 
-# read the names of secrets in secretsmanager that are tagged with our special tag (connector_config_sensitive=true)
+# read the names of secrets in secretsmanager that are tagged with our special tag (confluent_cloud_connector_config_sensitive=true)
 data "aws_secretsmanager_secrets" "secrets" {
   filter {
     name = "tag-key"
-    values = ["connector_config_sensitive"]
+    values = ["confluent_cloud_connector_config_sensitive"]
   }
   filter {
     name   = "tag-value"
@@ -67,8 +68,13 @@ locals {
   
   # transform [key, config_sensitive, config_nonsensitive, prevent_destroy]
   # to {key => {key: 'foo', config_sensitive: '{}', config_nonsensitive: '{}', prevent_destroy: true}}
-  connectors_map = { 
-    for row in data.sql_query.gwilliams_sql_connectors.result:
+  connectors_prevent_destroy_true_map = { 
+    for row in data.sql_query.gwilliams_sql_connectors_prevent_destroy_true.result:
+      row.key => row
+  }
+
+  connectors_prevent_destroy_false_map = { 
+    for row in data.sql_query.gwilliams_sql_connectors_prevent_destroy_false.result:
       row.key => row
   }
 
@@ -77,7 +83,7 @@ locals {
   # eg remove connector_config_sensitive prefix
   connector_config_sensitive = {
     for k,v in data.aws_secretsmanager_secret_version.secrets:
-      trimprefix(k, "connector_config_sensitive/") => jsondecode(v.secret_string)
+      trimprefix(k, "confluent_cloud_connector_config_sensitive/") => jsondecode(v.secret_string)
   }
 }
 
@@ -85,7 +91,7 @@ locals {
 #
 # Connectors 
 #
-resource "confluent_connector" "gwilliams-connectors" {
+resource "confluent_connector" "confluent_cloud_topics_prevent_destroy_true" {
   environment {
     id = confluent_environment.shared-env.id
   }
@@ -93,19 +99,30 @@ resource "confluent_connector" "gwilliams-connectors" {
     id = confluent_kafka_cluster.gwilliams-cluster.id
   }
 
-  for_each = local.connectors_map
+  for_each = local.connectors_prevent_destroy_true_map
 
   config_sensitive = try(local.connector_config_sensitive[each.key], {})
   config_nonsensitive = jsondecode(each.value.config_nonsensitive)
 
-  # depends_on = [
-  #   confluent_kafka_acl.app-connector-describe-on-cluster,
-  #   confluent_kafka_acl.app-connector-write-on-target-topic,
-  #   confluent_kafka_acl.app-connector-create-on-data-preview-topics,
-  #   confluent_kafka_acl.app-connector-write-on-data-preview-topics,
-  # ]
+  lifecycle {
+    prevent_destroy = true
+  }
+}
 
-  # lifecycle {
-  #   prevent_destroy = true
-  # }
+resource "confluent_connector" "confluent_cloud_topics_prevent_destroy_false" {
+  environment {
+    id = confluent_environment.shared-env.id
+  }
+  kafka_cluster {
+    id = confluent_kafka_cluster.gwilliams-cluster.id
+  }
+
+  for_each = local.connectors_prevent_destroy_false_map
+
+  config_sensitive = try(local.connector_config_sensitive[each.key], {})
+  config_nonsensitive = jsondecode(each.value.config_nonsensitive)
+
+  lifecycle {
+    prevent_destroy = false
+  }
 }
