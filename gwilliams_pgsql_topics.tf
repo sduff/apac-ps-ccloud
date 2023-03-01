@@ -8,14 +8,34 @@
 #
 # features:
 #   * create topics 1:1 database rows
-#   * topics are protected from deletion
 #   * partitions, config specified in database
 #   * partitions can be increased in db, some config settings can be changed in db (eg retentions.ms)
 # caveats (as expected with confluent cloud):
 #   * partitions can only be increased
-#   * some config settings require topic be deleted and recreated - you can delete the topic in the cloud console to
-#     force this to happen when you have `prevent_destroy=true` set in terraform
-
+#   * some config settings require topic be deleted and recreated
+# prevent destroy quirks:
+#   **`prevent_destroy`=`true` => `prevent_destroy`=`true`**
+#   Not possible - gives error: lifecycle.prevent_destroy set, but the plan calls for this resource to be destroyed
+#
+#   **`prevent_destroy`=`false` => `prevent_destroy`=`true`**
+#   This was intended to recreate the topic and prevents destruction of the new resource - however this results in 
+#   multiple deadlocks within terraform that can only be resolved by several terraform runs. Don't do this(!) Two 
+#   workarounds:
+#   1.  (easy way) Delete the topic by removing the row from postgres, run terraform to delete from cloud, add row 
+#       back with `prevent_destroy`=`true`, run terraform
+#   2.  (hard way - untested) Use `terraform state mv` to rename the containing resource - see 
+#       https://developer.hashicorp.com/terraform/cli/commands/state/mv
+#
+# **How to delete topic when `prevent_destroy`=`true`**
+#   1.  Delete row from postgres
+#   2.  Delete topic from confluent cloud (web)
+#   3.  Run terraform
+# This results in `No changes Your infrastructure matches the configuration`
+#
+# **How to delete topic when `prevent_destroy`=`false`**
+# Two ways:
+# 1.  Delete the row from postgres
+# 2.  Set `managed`=`false` - this has the advantage that you can recreate the topic by setting `managed`=`true` and then re-running terraform
 
 #
 # SQL data extraction
