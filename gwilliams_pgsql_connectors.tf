@@ -69,12 +69,12 @@ locals {
   # transform [key, config_sensitive, config_nonsensitive, prevent_destroy]
   # to {key => {key: 'foo', config_sensitive: '{}', config_nonsensitive: '{}', prevent_destroy: true}}
   connectors_prevent_destroy_true_map = { 
-    for row in data.sql_query.gwilliams_sql_connectors_prevent_destroy_true.result:
+    for row in data.sql_query.gwilliams_sql_confluent_cloud_connectors_prevent_destroy_true.result:
       row.key => row
   }
 
   connectors_prevent_destroy_false_map = { 
-    for row in data.sql_query.gwilliams_sql_connectors_prevent_destroy_false.result:
+    for row in data.sql_query.gwilliams_sql_confluent_cloud_connectors_prevent_destroy_false.result:
       row.key => row
   }
 
