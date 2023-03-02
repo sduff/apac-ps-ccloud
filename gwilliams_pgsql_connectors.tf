@@ -87,8 +87,7 @@ locals {
   }
 }
 
-output {
-  name = "confluent_cloud_connector_config_sensitive secret names"
+output "confluent_cloud_connector_config_sensitive_secret_names"{
   value = keys(nonsensitive(data.aws_secretsmanager_secret_version.secrets))
 }
 
