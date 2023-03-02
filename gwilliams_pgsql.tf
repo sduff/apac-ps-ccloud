@@ -117,9 +117,6 @@ resource "confluent_api_key" "gwilliams-cluster-kafka-api-key" {
     }
   }
 
-  lifecycle {
-    prevent_destroy = true
-  }
 }
 
 # Create Service Account
