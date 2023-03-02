@@ -140,6 +140,11 @@ resource "confluent_kafka_acl" "gwilliams-sa-write-all-topics" {
   operation     = "WRITE"
   permission    = "ALLOW"
 
+  credentials {
+    key    = confluent_api_key.gwilliams-cluster-kafka-api-key.id
+    secret = confluent_api_key.gwilliams-cluster-kafka-api-key.secret
+  }
+
   lifecycle {
     prevent_destroy = true
   }
