@@ -87,6 +87,10 @@ locals {
   }
 }
 
+output "confluent_cloud_connector_config_sensitive_secret_names"{
+  value = keys(try(data.aws_secretsmanager_secret_version.secrets, {}))
+}
+
 
 #
 # Connectors 
@@ -105,7 +109,7 @@ resource "confluent_connector" "confluent_cloud_topics_prevent_destroy_true" {
   config_nonsensitive = jsondecode(each.value.config_nonsensitive)
 
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false
   }
 }
 
