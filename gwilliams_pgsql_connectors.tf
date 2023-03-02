@@ -132,6 +132,10 @@ resource "confluent_connector" "confluent_cloud_topics_prevent_destroy_false" {
 }
 
 resource "confluent_kafka_acl" "gwilliams-sa-write-all-topics" {
+  kafka_cluster {
+    id = confluent_kafka_cluster.gwilliams-cluster.id
+  }
+
   resource_type = "TOPIC"
   resource_name = "*"
   pattern_type  = "LITERAL"
