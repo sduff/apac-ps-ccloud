@@ -130,3 +130,17 @@ resource "confluent_connector" "confluent_cloud_topics_prevent_destroy_false" {
     prevent_destroy = false
   }
 }
+
+resource "confluent_kafka_acl" "gwilliams-sa-write-all-topics" {
+  resource_type = "TOPIC"
+  resource_name = "*"
+  #pattern_type  = "LITERAL"
+  principal     = "User:${confluent_service_account.gwilliams_svc_acct.id}"
+  host          = "*"
+  operation     = "WRITE"
+  permission    = "ALLOW"
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
