@@ -102,9 +102,9 @@ resource "confluent_api_key" "gwilliams-cluster-kafka-api-key" {
   display_name = "gwilliams-cluster-kafka-api-key"
   description  = "gwilliams Cluster Kafka API Key"
   owner {
-    id          = data.confluent_service_account.gwilliams_svc_acct.id
-    api_version = data.confluent_service_account.gwilliams_svc_acct.api_version
-    kind        = data.confluent_service_account.gwilliams_svc_acct.kind
+    id          = confluent_service_account.gwilliams_svc_acct.id
+    api_version = confluent_service_account.gwilliams_svc_acct.api_version
+    kind        = confluent_service_account.gwilliams_svc_acct.kind
   }
 
   managed_resource {
