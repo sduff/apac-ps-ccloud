@@ -139,6 +139,7 @@ resource "confluent_kafka_acl" "gwilliams-sa-write-all-topics" {
   host          = "*"
   operation     = "WRITE"
   permission    = "ALLOW"
+  rest_endpoint = confluent_kafka_cluster.gwilliams-cluster.rest_endpoint
 
   credentials {
     key    = confluent_api_key.gwilliams-cluster-kafka-api-key.id
