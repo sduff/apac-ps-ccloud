@@ -238,6 +238,8 @@ resource "confluent_connector" "confluent_cloud_connectors_prevent_destroy_true"
   lifecycle {
     prevent_destroy = false
   }
+
+  depends_on = confluent_kafka_acl.connector_acls
 }
 
 resource "confluent_connector" "confluent_cloud_connectors_prevent_destroy_false" {
