@@ -255,7 +255,7 @@ resource "confluent_connector" "confluent_cloud_connectors_prevent_destroy_false
   }
 }
 
-resource "confluent_kafka_acl" "gwilliams-sa-describe-cluster" {
+resource "confluent_kafka_acl" "connector-acls" {
   for_each = local.confluent_cloud_connector_instance_acls
   
   resource_type = each.value.resource_type
