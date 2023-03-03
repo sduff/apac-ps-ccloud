@@ -160,9 +160,9 @@ locals {
         # topic
 
         # topic.prefix
-        "{TOPIC_PREFIX}" = try(local.all_connectors_map[k]["config_nonsensitive"]["topic.prefix"], "__MISSING__")
+        "{TOPIC_PREFIX}" = try(jsondecode(local.all_connectors_map[k]["config_nonsensitive"])["topic.prefix"], "__MISSING__")
         # database.server.name
-        "{DATABASE_SERVER_NAME}" = try(local.all_connectors_map[k]["config_nonsensitive"]["database.server.name"], "__MISSING__")
+        "{DATABASE_SERVER_NAME}" = try(jsondecode(local.all_connectors_map[k]["config_nonsensitive"])["database.server.name"], "__MISSING__")
       }
   })
 }
