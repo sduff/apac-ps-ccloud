@@ -178,13 +178,13 @@ resource "confluent_kafka_acl" "gwilliams-sa-read-all-topics" {
 
 # Set a CREATE ACL to the following topic prefix:
 # confluent kafka acl create --allow --service-account "<service-account-id>" --operation "CREATE" --prefix --topic "dlq-lcc-"
-resource "confluent_kafka_acl" "gwilliams-sa-create-dlq-lcc-" {
+resource "confluent_kafka_acl" "gwilliams-sa-create-dlq-lcc" {
   kafka_cluster {
     id = confluent_kafka_cluster.gwilliams-cluster.id
   }
 
   resource_type = "TOPIC"
-  resource_name = "dlq-lcc-"
+  resource_name = "dlq-lcc"
   pattern_type  = "PREFIXED"
   principal     = "User:${confluent_service_account.gwilliams_svc_acct.id}"
   host          = "*"
@@ -201,13 +201,13 @@ resource "confluent_kafka_acl" "gwilliams-sa-create-dlq-lcc-" {
 
 # Set a WRITE ACL to the following topic prefix:
 # confluent kafka acl create --allow --service-account "<service-account-id>" --operation "WRITE" --prefix --topic "dlq-lcc-"
-resource "confluent_kafka_acl" "gwilliams-sa-write-dlq-lcc-" {
+resource "confluent_kafka_acl" "gwilliams-sa-write-dlq-lcc" {
   kafka_cluster {
     id = confluent_kafka_cluster.gwilliams-cluster.id
   }
 
   resource_type = "TOPIC"
-  resource_name = "dlq-lcc-"
+  resource_name = "dlq-lcc"
   pattern_type  = "PREFIXED"
   principal     = "User:${confluent_service_account.gwilliams_svc_acct.id}"
   host          = "*"
@@ -223,13 +223,13 @@ resource "confluent_kafka_acl" "gwilliams-sa-write-dlq-lcc-" {
 
 # Set a READ ACL to a consumer group with the following prefix:
 # confluent kafka acl create --allow --service-account "<service-account-id>" --operation "READ"  --prefix --consumer-group "connect-lcc-"
-resource "confluent_kafka_acl" "gwilliams-sa-read-dlq-lcc-" {
+resource "confluent_kafka_acl" "gwilliams-sa-read-dlq-lcc" {
   kafka_cluster {
     id = confluent_kafka_cluster.gwilliams-cluster.id
   }
 
   resource_type = "GROUP"
-  resource_name = "connect-lcc-"
+  resource_name = "connect-lcc"
   pattern_type  = "PREFIXED"
   principal     = "User:${confluent_service_account.gwilliams_svc_acct.id}"
   host          = "*"
