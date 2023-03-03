@@ -255,7 +255,27 @@ resource "confluent_connector" "confluent_cloud_connectors_prevent_destroy_false
   }
 }
 
-
+resource "confluent_kafka_acl" "gwilliams-sa-describe-cluster" {
+  for_each = local.confluent_cloud_connector_instance_acls
+  
+  resource_type = each.value.resource_type
+  resource_name = each.value.resource_name
+  pattern_type  = each.value.pattern_type
+  operation     = each.value.operation
+  permission    = "ALLOW"
+  
+  principal     = "User:${local.all_connectors_map[each.value.connector_name]["kafka.service.account.id"]}"
+  host          = "*"
+  
+  rest_endpoint = confluent_kafka_cluster.gwilliams-cluster.rest_endpoint
+  kafka_cluster {
+    id = confluent_kafka_cluster.gwilliams-cluster.id
+  }
+  credentials {
+    key    = confluent_api_key.gwilliams-cluster-kafka-api-key.id
+    secret = confluent_api_key.gwilliams-cluster-kafka-api-key.secret
+  }
+}
 
 #
 # ========= god mode acls ---------------
