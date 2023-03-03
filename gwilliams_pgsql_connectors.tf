@@ -156,8 +156,9 @@ locals {
     for k,v in local.all_connectors_map: 
       k => {
         # connector id
-
-        # topic
+        "{CONNECTOR_ID}" = try(confluent_connector.confluent_cloud_connectors_prevent_destroy_true[k].id, confluent_connector.confluent_cloud_connectors_prevent_destroy_false[k].id)
+        
+        # topic ???
 
         # topic.prefix
         "{TOPIC_PREFIX}" = try(jsondecode(local.all_connectors_map[k]["config_nonsensitive"])["topic.prefix"], "__MISSING__")
