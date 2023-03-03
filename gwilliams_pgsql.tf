@@ -145,7 +145,7 @@ resource "confluent_role_binding" "gwilliams_svc_acct-CloudClusterAdmin" {
 }
 
 resource "confluent_role_binding" "gwilliams_svc_acct-ResourceOwner" {
-  principal   = "User:${confluent_service_account.gwilliams_svc_acct.id}"
+  principal   = "User:${confluent_service_account.gwilliams_svc_acct.id}/kafka=${confluent_kafka_cluster.gwilliams-cluster.id}/topic=*"
   role_name   = "ResourceOwner"
   crn_pattern = confluent_kafka_cluster.gwilliams-cluster.rbac_crn
 }
