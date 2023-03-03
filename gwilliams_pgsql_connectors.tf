@@ -156,11 +156,12 @@ locals {
     for k,v in local.all_connectors_map: 
       k => {
         # connector id
-        "{CONNECTOR_ID}" = try(
-          confluent_connector.confluent_cloud_connectors_prevent_destroy_true[k].id, 
-          confluent_connector.confluent_cloud_connectors_prevent_destroy_false[k].id, 
-          ""
-        )
+        "{CONNECTOR_ID}" = ""
+        # try(
+        #   confluent_connector.confluent_cloud_connectors_prevent_destroy_true[k].id, 
+        #   confluent_connector.confluent_cloud_connectors_prevent_destroy_false[k].id, 
+        #   ""
+       # )
         
         # topic - from separate db field. dont try to be smart, learn to be stupid
         "{TOPIC}" = local.all_connectors_map[k]["acl_topic_allow"]
