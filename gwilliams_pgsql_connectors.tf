@@ -172,7 +172,7 @@ locals {
   # rewrite something
   confluent_cloud_connector_instance_acls = merge([
     for k,v in local.all_connectors_map: {
-      for id, rule in local.confluent_cloud_connector_specific_acls[v["connector.class"]]:
+      for id, rule in coalesce(local.confluent_cloud_connector_specific_acls[v["connector.class"]],{}):
 
 
         format("%s-%s", k, id) => merge(
