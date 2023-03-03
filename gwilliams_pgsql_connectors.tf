@@ -171,7 +171,7 @@ locals {
 
   # rewrite something
   confluent_cloud_connector_instance_acls = merge([
-    for k,v in local.connectors_prevent_destroy_false_map: {
+    for k,v in local.all_connectors_map: {
       for id, rule in local.confluent_cloud_connector_specific_acls[v["connector.class"]]:
 
 
