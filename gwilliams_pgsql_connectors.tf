@@ -156,7 +156,7 @@ locals {
     for k,v in local.all_connectors_map: 
       k => {
         # connector id
-        "{CONNECTOR_ID}" = confluent_connector.confluent_cloud_connectors_prevent_destroy_true[k].id  #coalesce(try(confluent_connector.confluent_cloud_connectors_prevent_destroy_true[k].id, confluent_connector.confluent_cloud_connectors_prevent_destroy_false[k].id), "__ERROR__")
+        "{CONNECTOR_ID}" = try(confluent_connector.confluent_cloud_connectors_prevent_destroy_true[k].id, confluent_connector.confluent_cloud_connectors_prevent_destroy_false[k].id, "__ERROR__")
         
         # topic - from separate db field. dont try to be smart, learn to be stupid
         "{TOPIC}" = local.all_connectors_map[k]["acl_topic_allow"]
@@ -168,6 +168,32 @@ locals {
         "{DATABASE_SERVER_NAME}" = try(jsondecode(local.all_connectors_map[k]["config_nonsensitive"])["database.server.name"], "__MISSING__")
       }
   })
+
+  # rewrite something
+  confluent_cloud_connector_instance_acls = merge([
+    for k,v in local.connectors_prevent_destroy_false_map: {
+      for id, rule in local.confluent_cloud_connector_specific_acls[v["connector.class"]]:
+
+
+        format("%s-%s", k, id) => merge(
+          rule, 
+          {"connector_name" = k},
+
+
+          {"resource_name" = replace(
+            rule.resource_name, 
+            "/{([^}]+)}/", 
+            lookup(
+              local.token_replacements_map[k], 
+              coalesce(regex("[^{]*(?P<token>{[^}]+})?[^}]*", rule.resource_name).token, "__MISSING__"),
+              "__UNKNOWN__"
+            )
+          )
+        }
+        )
+      }
+  ]...)
+
 }
 
 output "token_replacements_map" {
@@ -182,6 +208,9 @@ output "confluent_cloud_connector_config_sensitive_secret_names"{
   value = keys(try(data.aws_secretsmanager_secret_version.secrets, {}))
 }
 
+output "confluent_cloud_connector_instance_acls" {
+  value = local.confluent_cloud_connector_instance_acls
+}
 
 #
 # Connectors 
