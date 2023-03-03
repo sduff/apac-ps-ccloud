@@ -138,8 +138,8 @@ resource "confluent_role_binding" "gwilliams_svc_acct-DeveloperRead" {
  crn_pattern = "${confluent_kafka_cluster.gwilliams-cluster.rbac_crn}/kafka=${confluent_kafka_cluster.gwilliams-cluster.id}/topic=*"
 }
 
-resource "confluent_role_binding" "gwilliams_svc_acct-DeveloperManage" {
+resource "confluent_role_binding" "gwilliams_svc_acct-CloudClusterAdmin" {
   principal   = "User:${confluent_service_account.gwilliams_svc_acct.id}"
   role_name   = "CloudClusterAdmin"
-  crn_pattern = "${confluent_kafka_cluster.gwilliams-cluster.rbac_crn}/kafka=${confluent_kafka_cluster.gwilliams-cluster.id}/topic=*"
+  crn_pattern = confluent_kafka_cluster.gwilliams-cluster.rbac_crn
 }
