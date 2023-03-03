@@ -85,6 +85,26 @@ locals {
     for k,v in data.aws_secretsmanager_secret_version.secrets:
       trimprefix(k, "confluent_cloud_connector_config_sensitive/") => jsondecode(v.secret_string)
   }
+
+  all_connectors_map = merge(local.connectors_prevent_destroy_false_map, local.connectors_prevent_destroy_true_map)
+
+  token_replacements_map = merge({
+    for k,v in local.connectors_prevent_destroy_false_map: 
+      k => {
+        # connector id
+
+        # topic
+
+        # topic.prefix
+        "{TOPIC_PREFIX}" = try(local.all_connectors_map[k]["topic.prefix"], "__MISSING__")
+        # database.server.name
+        "{DATABASE_SERVER_NAME}" = try(local.all_connectors_map[k]["database.server.name"], "__MISSING__")
+      }
+  })
+}
+
+output "token_replacements_map" {
+  value = local.token_replacements_map
 }
 
 output "confluent_cloud_connector_config_sensitive_secret_names"{
@@ -95,7 +115,7 @@ output "confluent_cloud_connector_config_sensitive_secret_names"{
 #
 # Connectors 
 #
-resource "confluent_connector" "confluent_cloud_topics_prevent_destroy_true" {
+resource "confluent_connector" "confluent_cloud_connectors_prevent_destroy_true" {
   environment {
     id = confluent_environment.shared-env.id
   }
@@ -113,7 +133,7 @@ resource "confluent_connector" "confluent_cloud_topics_prevent_destroy_true" {
   }
 }
 
-resource "confluent_connector" "confluent_cloud_topics_prevent_destroy_false" {
+resource "confluent_connector" "confluent_cloud_connectors_prevent_destroy_false" {
   environment {
     id = confluent_environment.shared-env.id
   }
@@ -130,6 +150,93 @@ resource "confluent_connector" "confluent_cloud_topics_prevent_destroy_false" {
     prevent_destroy = false
   }
 }
+
+locals {
+  # Up-to-date ACL definitions
+  # https://docs.confluent.io/cloud/current/connectors/service-account.html#source-connector-service-account
+  confluent_cloud_connector_generic_acls = {
+    "SinkConnector" = [
+      # Set a DESCRIBE ACL to the cluster.
+      # confluent kafka acl create --allow --service-account "<service-account-id>" --operation "DESCRIBE" --cluster-scope
+      {resource_type = "CLUSTER", resource_name = "kafka-cluster", pattern_type  = "LITERAL", operation = "DESCRIBE"},
+    
+      # Set a READ ACL to pageviews
+      # confluent kafka acl create --allow --service-account "<service-account-id>" --operation "READ" --topic "pageviews"
+      {resource_type = "TOPIC", resource_name = "$TOPIC", pattern_type  = "LITERAL", operation = "READ"},
+    
+      # Set a CREATE ACL to the following topic prefix:
+      # confluent kafka acl create --allow --service-account "<service-account-id>" --operation "CREATE" --prefix --topic "dlq-lcc-"
+      {resource_type = "TOPIC", resource_name = "dlq-lcc-$CONNECTOR_ID", pattern_type  = "LITERAL", operation = "CREATE"},
+    
+      # Set a WRITE ACL to the following topic prefix:
+      # confluent kafka acl create --allow --service-account "<service-account-id>" --operation "WRITE" --prefix --topic "dlq-lcc-"
+      {resource_type = "TOPIC", resource_name = "dlq-lcc-$CONNECTOR_ID", pattern_type  = "LITERAL",operation = "WRITE"},
+    
+      # Set a READ ACL to a consumer group with the following prefix:
+      # confluent kafka acl create --allow --service-account "<service-account-id>" --operation "READ"  --prefix --consumer-group "connect-lcc-"
+      {resource_type = "GROUP", resource_name = "connect-lcc", pattern_type  = "PREFIXED", operation = "READ"},
+  
+    ],
+    "SourceConnector" = [
+      # Set a DESCRIBE ACL to the cluster.
+      # confluent kafka acl create --allow --service-account "<service-account-id>" --operation "DESCRIBE" --cluster-scope
+      {resource_type = "CLUSTER", resource_name = "kafka-cluster", pattern_type = "LITERAL", operation = "DESCRIBE"},
+
+      # Set a WRITE ACL to passengers:
+      # confluent kafka acl create --allow --service-account "<service-account-id>" --operation "WRITE" --topic "passengers"
+      {resource_type = "TOPIC", resource_name = "$TOPIC", pattern_type  = "LITERAL", operation = "WRITE"},
+    ]
+  }
+
+  confluent_cloud_connector_specific_acls = {
+
+    # jdbc    
+    "MicrosoftSqlServerSource" = merge(local.confluent_cloud_connector_generic_acls.SourceConnector, [
+      # Add the following ACL entries for these source connectors:
+      # Confluent kafka acl create --allow --service-account "<service-account-id>" --operation "CREATE" --prefix --topic "<topic.prefix>"
+      {resource_type = "TOPIC", resource_name = "$TOPIC_PREFIX", pattern_type  = "PREFIXED", operation = "CREATE"},
+      # confluent kafka acl create --allow --service-account "<service-account-id>" --operation "WRITE" --prefix --topic "<topic.prefix>"
+      {resource_type = "TOPIC", resource_name = "$TOPIC_PREFIX", pattern_type  = "PREFIXED", operation = "WRITE"},
+    ]),
+
+    # debezium
+    "SqlServerCdcSource" = merge(local.confluent_cloud_connector_generic_acls.SourceConnector,[
+      # ACLs to create and write to table related topics prefixed with <database.server.name>:
+      # confluent kafka acl create --allow --service-account "<service-account-id>" --operation "CREATE" --prefix --topic "<database.server.name>"
+      {resource_type = "TOPIC", resource_name = "$DATABASE_SERVER_NAME", pattern_type  = "PREFIX", operation = "CREATE"},
+      # confluent kafka acl create --allow --service-account "<service-account-id>" --operation "WRITE" --prefix --topic "<database.server.name>"
+      {resource_type = "TOPIC", resource_name = "$DATABASE_SERVER_NAME", pattern_type  = "PREFIX", operation = "WRITE"},
+
+      # ACLs to describe configurations at the cluster scope level:
+      # confluent kafka acl create --allow --service-account "<service-account-id>" --cluster-scope --operation "DESCRIBE-CONFIGS"
+      {resource_type = "CLUSTER", resource_name = "kafka-cluster", pattern_type  = "LITERAL", operation = "DESCRIBE-CONFIGS"},
+    ]),
+
+    # s3
+    "S3_SINK" = local.confluent_cloud_connector_generic_acls.SourceConnector
+  }
+}
+
+
+resource "confluent_kafka_acl" "gwilliams-sa-describe-cluster" {
+  kafka_cluster {
+    id = confluent_kafka_cluster.gwilliams-cluster.id
+  }
+  resource_type = "CLUSTER"
+  resource_name = "kafka-cluster"
+  pattern_type  = "LITERAL"
+  principal     = "User:${confluent_service_account.gwilliams_svc_acct.id}"
+  host          = "*"
+  operation     = "DESCRIBE"
+  permission    = "ALLOW"
+  rest_endpoint = confluent_kafka_cluster.gwilliams-cluster.rest_endpoint
+
+  credentials {
+    key    = confluent_api_key.gwilliams-cluster-kafka-api-key.id
+    secret = confluent_api_key.gwilliams-cluster-kafka-api-key.secret
+  }
+}
+
 
 # ACL requirements for confluent connect:
 # https://docs.confluent.io/cloud/current/connectors/service-account.html#service-accounts
@@ -175,6 +282,8 @@ resource "confluent_kafka_acl" "gwilliams-sa-read-all-topics" {
     secret = confluent_api_key.gwilliams-cluster-kafka-api-key.secret
   }
 }
+
+
 
 # Set a CREATE ACL to the following topic prefix:
 # confluent kafka acl create --allow --service-account "<service-account-id>" --operation "CREATE" --prefix --topic "dlq-lcc-"
