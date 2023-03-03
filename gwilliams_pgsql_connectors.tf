@@ -78,6 +78,8 @@ locals {
       row.key => row
   }
 
+  all_connectors_map = merge(local.connectors_prevent_destroy_false_map, local.connectors_prevent_destroy_true_map)
+
   # transform {"connector_config_sensitive/MySqlCdcSourceConnector_0": {...}"}
   # to {MySqlCdcSourceConnector_0 => {...}}
   # eg remove connector_config_sensitive prefix
@@ -150,15 +152,14 @@ locals {
     "S3_SINK" = local.confluent_cloud_connector_generic_acls.SourceConnector
   }
 
-  all_connectors_map = merge(local.connectors_prevent_destroy_false_map, local.connectors_prevent_destroy_true_map)
-
   token_replacements_map = merge({
     for k,v in local.all_connectors_map: 
       k => {
         # connector id
         "{CONNECTOR_ID}" = coalesce(try(confluent_connector.confluent_cloud_connectors_prevent_destroy_true[k].id, confluent_connector.confluent_cloud_connectors_prevent_destroy_false[k].id), "__ERROR__")
         
-        # topic ???
+        # topic - from separate db field. dont try to be smart, learn to be stupid
+        "{TOPIC}" = local.all_connectors_map[k]["acl_topic_allow"]
 
         # topic.prefix
         "{TOPIC_PREFIX}" = try(jsondecode(local.all_connectors_map[k]["config_nonsensitive"])["topic.prefix"], "__MISSING__")
