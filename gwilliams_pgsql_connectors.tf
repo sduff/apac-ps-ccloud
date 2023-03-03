@@ -143,6 +143,12 @@ resource "confluent_kafka_acl" "gwilliams-sa-describe-cluster" {
   host          = "*"
   operation     = "DESCRIBE"
   permission    = "ALLOW"
+  rest_endpoint = confluent_kafka_cluster.gwilliams-cluster.rest_endpoint
+
+  credentials {
+    key    = confluent_api_key.gwilliams-cluster-kafka-api-key.id
+    secret = confluent_api_key.gwilliams-cluster-kafka-api-key.secret
+  }
 }
 
 # Set a READ ACL to $TOPIC (expanded to all topics to allow creation of arbitrary connectors)
