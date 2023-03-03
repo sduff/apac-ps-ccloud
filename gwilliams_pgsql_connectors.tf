@@ -264,7 +264,7 @@ resource "confluent_kafka_acl" "connector-acls" {
   operation     = each.value.operation
   permission    = "ALLOW"
   
-  principal     = "User:${local.all_connectors_map[each.value.connector_name]["kafka.service.account.id"]}"
+  principal     = "User:${jsondecode(local.all_connectors_map[each.value.connector_name][config_nonsensitive])["kafka.service.account.id"]}"
   host          = "*"
   
   rest_endpoint = confluent_kafka_cluster.gwilliams-cluster.rest_endpoint
