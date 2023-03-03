@@ -96,12 +96,6 @@ resource "confluent_kafka_topic" "gwilliams-topics-prevent-destroy-true" {
   lifecycle {
     prevent_destroy = true
   }
-
-  depends_on = [
-    confluent_kafka_cluster.gwilliams-cluster,
-    confluent_api_key.gwilliams-cluster-kafka-api-key
-  ]
-
 }
 
 resource "confluent_kafka_topic" "gwilliams-topics-prevent-destroy-false" {
@@ -125,11 +119,6 @@ resource "confluent_kafka_topic" "gwilliams-topics-prevent-destroy-false" {
   lifecycle {
     prevent_destroy = false
   }
-
-  depends_on = [
-    confluent_kafka_cluster.gwilliams-cluster,
-    confluent_api_key.gwilliams-cluster-kafka-api-key
-  ]
 }
 
 output "confluent_cloud_managed_topics"{
