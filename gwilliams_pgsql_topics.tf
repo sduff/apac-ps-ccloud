@@ -98,7 +98,8 @@ resource "confluent_kafka_topic" "gwilliams-topics-prevent-destroy-true" {
   }
 
   depends_on = [
-    confluent_kafka_cluster.gwilliams-cluster
+    confluent_kafka_cluster.gwilliams-cluster,
+    confluent_api_key.gwilliams-cluster-kafka-api-key
   ]
 
 }
@@ -126,6 +127,7 @@ resource "confluent_kafka_topic" "gwilliams-topics-prevent-destroy-false" {
   }
 
   depends_on = [
-    confluent_kafka_cluster.gwilliams-cluster
+    confluent_kafka_cluster.gwilliams-cluster,
+    confluent_api_key.gwilliams-cluster-kafka-api-key
   ]
 }
