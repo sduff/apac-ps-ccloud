@@ -229,26 +229,6 @@ resource "confluent_connector" "confluent_cloud_connectors_prevent_destroy_false
 #
 
 
-resource "confluent_kafka_acl" "gwilliams-sa-describe-cluster" {
-  kafka_cluster {
-    id = confluent_kafka_cluster.gwilliams-cluster.id
-  }
-  resource_type = "CLUSTER"
-  resource_name = "kafka-cluster"
-  pattern_type  = "LITERAL"
-  principal     = "User:${confluent_service_account.gwilliams_svc_acct.id}"
-  host          = "*"
-  operation     = "DESCRIBE"
-  permission    = "ALLOW"
-  rest_endpoint = confluent_kafka_cluster.gwilliams-cluster.rest_endpoint
-
-  credentials {
-    key    = confluent_api_key.gwilliams-cluster-kafka-api-key.id
-    secret = confluent_api_key.gwilliams-cluster-kafka-api-key.secret
-  }
-}
-
-
 # ACL requirements for confluent connect:
 # https://docs.confluent.io/cloud/current/connectors/service-account.html#service-accounts
 # Set a DESCRIBE ACL to the cluster.
