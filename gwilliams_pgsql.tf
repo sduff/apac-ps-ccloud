@@ -140,6 +140,6 @@ resource "confluent_role_binding" "gwilliams_svc_acct-DeveloperRead" {
 
 resource "confluent_role_binding" "gwilliams_svc_acct-DeveloperManage" {
   principal   = "User:${confluent_service_account.gwilliams_svc_acct.id}"
-  role_name   = "DeveloperManage"
+  role_name   = "CloudClusterAdmin"
   crn_pattern = "${confluent_kafka_cluster.gwilliams-cluster.rbac_crn}/kafka=${confluent_kafka_cluster.gwilliams-cluster.id}/topic=*"
 }
