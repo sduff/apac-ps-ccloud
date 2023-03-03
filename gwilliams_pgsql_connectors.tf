@@ -156,7 +156,11 @@ locals {
     for k,v in local.all_connectors_map: 
       k => {
         # connector id
-        "{CONNECTOR_ID}" = try(confluent_connector.confluent_cloud_connectors_prevent_destroy_true[k].id, confluent_connector.confluent_cloud_connectors_prevent_destroy_false[k].id, "__ERROR__")
+        "{CONNECTOR_ID}" = try(
+          confluent_connector.confluent_cloud_connectors_prevent_destroy_true[k].id, 
+          confluent_connector.confluent_cloud_connectors_prevent_destroy_false[k].id, 
+          "*"
+        )
         
         # topic - from separate db field. dont try to be smart, learn to be stupid
         "{TOPIC}" = local.all_connectors_map[k]["acl_topic_allow"]
@@ -238,6 +242,10 @@ resource "confluent_connector" "confluent_cloud_connectors_prevent_destroy_true"
   lifecycle {
     prevent_destroy = false
   }
+
+  depends_on = [
+    confluent_kafka_acl.connector_acls
+  ]
 }
 
 resource "confluent_connector" "confluent_cloud_connectors_prevent_destroy_false" {
@@ -256,6 +264,10 @@ resource "confluent_connector" "confluent_cloud_connectors_prevent_destroy_false
   lifecycle {
     prevent_destroy = false
   }
+  
+  depends_on = [
+    confluent_kafka_acl.connector_acls
+  ]
 }
 
 resource "confluent_kafka_acl" "connector_acls" {
