@@ -178,8 +178,7 @@ resource "confluent_kafka_acl" "gwilliams-sa-read-all-topics" {
 
 # Set a CREATE ACL to the following topic prefix:
 # confluent kafka acl create --allow --service-account "<service-account-id>" --operation "CREATE" --prefix --topic "dlq-lcc-"
-#resource "confluent_kafka_acl" "gwilliams-sa-create-dlq-lcc-" {
-resource "confluent_kafka_acl" "gwilliams-sa-create-all-topics" {
+resource "confluent_kafka_acl" "gwilliams-sa-create-dlq-lcc-" {
   kafka_cluster {
     id = confluent_kafka_cluster.gwilliams-cluster.id
   }
@@ -243,27 +242,3 @@ resource "confluent_kafka_acl" "gwilliams-sa-read-dlq-lcc-" {
     secret = confluent_api_key.gwilliams-cluster-kafka-api-key.secret
   }
 }
-
-
-
-resource "confluent_kafka_acl" "gwilliams-sa-write-all-topics" {
-  kafka_cluster {
-    id = confluent_kafka_cluster.gwilliams-cluster.id
-  }
-
-  resource_type = "TOPIC"
-  resource_name = "*"
-  pattern_type  = "LITERAL"
-  principal     = "User:${confluent_service_account.gwilliams_svc_acct.id}"
-  host          = "*"
-  operation     = "WRITE"
-  permission    = "ALLOW"
-  rest_endpoint = confluent_kafka_cluster.gwilliams-cluster.rest_endpoint
-
-  credentials {
-    key    = confluent_api_key.gwilliams-cluster-kafka-api-key.id
-    secret = confluent_api_key.gwilliams-cluster-kafka-api-key.secret
-  }
-
-}
-
