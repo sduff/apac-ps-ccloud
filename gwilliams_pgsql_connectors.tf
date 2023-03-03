@@ -180,6 +180,7 @@ locals {
           {"connector_name" = k},
 
 
+          # override the resource name with token replacement
           {"resource_name" = replace(
             rule.resource_name, 
             "/{([^}]+)}/", 
@@ -188,8 +189,10 @@ locals {
               coalesce(regex("[^{]*(?P<token>{[^}]+})?[^}]*", rule.resource_name).token, "__MISSING__"),
               "__UNKNOWN__"
             )
-          )
-        }
+          )},
+
+          # extract the principal
+          {"principal" = "User:${jsondecode(v["config_nonsensitive"])["kafka.service.account.id"]}"}
         )
       }
   ]...)
@@ -264,7 +267,7 @@ resource "confluent_kafka_acl" "connector-acls" {
   operation     = each.value.operation
   permission    = "ALLOW"
   
-  principal     = "User:${jsondecode(local.all_connectors_map[each.value.connector_name][config_nonsensitive])["kafka.service.account.id"]}"
+  principal     = each.value.principal
   host          = "*"
   
   rest_endpoint = confluent_kafka_cluster.gwilliams-cluster.rest_endpoint
