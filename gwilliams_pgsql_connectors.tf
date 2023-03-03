@@ -160,15 +160,19 @@ locals {
         # topic
 
         # topic.prefix
-        "{TOPIC_PREFIX}" = try(local.all_connectors_map[k]["topic.prefix"], "__MISSING__")
+        "{TOPIC_PREFIX}" = try(local.all_connectors_map[k]["config_nonsensitive"]["topic.prefix"], "__MISSING__")
         # database.server.name
-        "{DATABASE_SERVER_NAME}" = try(local.all_connectors_map[k]["database.server.name"], "__MISSING__")
+        "{DATABASE_SERVER_NAME}" = try(local.all_connectors_map[k]["config_nonsensitive"]["database.server.name"], "__MISSING__")
       }
   })
 }
 
 output "token_replacements_map" {
   value = local.token_replacements_map
+}
+
+output "all_connectors_map" {
+  value = local.all_connectors_map
 }
 
 output "confluent_cloud_connector_config_sensitive_secret_names"{
