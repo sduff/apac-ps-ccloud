@@ -153,7 +153,7 @@ locals {
   all_connectors_map = merge(local.connectors_prevent_destroy_false_map, local.connectors_prevent_destroy_true_map)
 
   token_replacements_map = merge({
-    for k,v in local.connectors_prevent_destroy_false_map: 
+    for k,v in local.all_connectors_map: 
       k => {
         # connector id
 
