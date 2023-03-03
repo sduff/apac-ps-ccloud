@@ -215,7 +215,7 @@ resource "confluent_kafka_acl" "gwilliams-sa-write-dlq-lcc-" {
 
 # Set a READ ACL to a consumer group with the following prefix:
 # confluent kafka acl create --allow --service-account "<service-account-id>" --operation "READ"  --prefix --consumer-group "connect-lcc-"
-resource "confluent_kafka_acl" "gwilliams-sa-write-dlq-lcc-" {
+resource "confluent_kafka_acl" "gwilliams-sa-read-dlq-lcc-" {
   kafka_cluster {
     id = confluent_kafka_cluster.gwilliams-cluster.id
   }
