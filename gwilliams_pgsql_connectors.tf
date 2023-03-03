@@ -149,7 +149,7 @@ locals {
     }),
 
     # s3
-    "S3_SINK" = local.confluent_cloud_connector_generic_acls.SourceConnector
+    "S3_SINK" = local.confluent_cloud_connector_generic_acls.SinkConnector
   }
 
   token_replacements_map = merge({
