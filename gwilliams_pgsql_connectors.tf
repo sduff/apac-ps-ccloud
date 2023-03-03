@@ -155,7 +155,7 @@ resource "confluent_kafka_acl" "gwilliams-sa-write-all-topics" {
   }
 }
 
-resource "confluent_kafka_acl" "gwilliams-sa-write-all-topics" {
+resource "confluent_kafka_acl" "gwilliams-sa-create-all-topics" {
   kafka_cluster {
     id = confluent_kafka_cluster.gwilliams-cluster.id
   }
