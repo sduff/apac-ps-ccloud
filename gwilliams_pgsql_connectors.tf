@@ -140,7 +140,7 @@ resource "confluent_kafka_acl" "gwilliams-sa-describe-cluster" {
     id = confluent_kafka_cluster.gwilliams-cluster.id
   }
   resource_type = "CLUSTER"
-  resource_name = confluent_kafka_cluster.gwilliams-cluster.id
+  resource_name = "kafka-cluster"
   pattern_type  = "LITERAL"
   principal     = "User:${confluent_service_account.gwilliams_svc_acct.id}"
   host          = "*"
