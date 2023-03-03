@@ -136,6 +136,9 @@ resource "confluent_connector" "confluent_cloud_topics_prevent_destroy_false" {
 # Set a DESCRIBE ACL to the cluster.
 # confluent kafka acl create --allow --service-account "<service-account-id>" --operation "DESCRIBE" --cluster-scope
 resource "confluent_kafka_acl" "gwilliams-sa-describe-cluster" {
+  kafka_cluster {
+    id = confluent_kafka_cluster.gwilliams-cluster.id
+  }
   resource_type = "CLUSTER"
   resource_name = "kafka-cluster"
   pattern_type  = "LITERAL"
