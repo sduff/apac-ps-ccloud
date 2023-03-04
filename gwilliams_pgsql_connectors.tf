@@ -103,11 +103,11 @@ locals {
     
       # Set a CREATE ACL to the following topic prefix:
       # confluent kafka acl create --allow --service-account "<service-account-id>" --operation "CREATE" --prefix --topic "dlq-lcc-"
-      "c" = {resource_type = "TOPIC", resource_name = "dlq-lcc-{CONNECTOR_ID}", pattern_type  = "PREFIXED", operation = "CREATE"},
+      "c" = {resource_type = "TOPIC", resource_name = "dlq-lcc-", pattern_type  = "PREFIXED", operation = "CREATE"},
     
       # Set a WRITE ACL to the following topic prefix:
       # confluent kafka acl create --allow --service-account "<service-account-id>" --operation "WRITE" --prefix --topic "dlq-lcc-"
-      "d" = {resource_type = "TOPIC", resource_name = "dlq-lcc-{CONNECTOR_ID}", pattern_type  = "PREFIXED",operation = "WRITE"},
+      "d" = {resource_type = "TOPIC", resource_name = "dlq-lcc-", pattern_type  = "PREFIXED",operation = "WRITE"},
     
       # Set a READ ACL to a consumer group with the following prefix:
       # confluent kafka acl create --allow --service-account "<service-account-id>" --operation "READ"  --prefix --consumer-group "connect-lcc-"
@@ -152,15 +152,34 @@ locals {
     "S3_SINK" = local.confluent_cloud_connector_generic_acls.SinkConnector
   }
 
+  confluent_cloud_connector_generic_acls_post = {
+    "SinkConnector" = {
+       # Set a CREATE ACL to the following topic prefix:
+      # confluent kafka acl create --allow --service-account "<service-account-id>" --operation "CREATE" --prefix --topic "dlq-lcc-"
+      "x" = {resource_type = "TOPIC", resource_name = "dlq-lcc-{CONNECTOR_ID}", pattern_type  = "PREFIXED", operation = "CREATE"},
+    
+      # Set a WRITE ACL to the following topic prefix:
+      # confluent kafka acl create --allow --service-account "<service-account-id>" --operation "WRITE" --prefix --topic "dlq-lcc-"
+      "y" = {resource_type = "TOPIC", resource_name = "dlq-lcc-{CONNECTOR_ID}", pattern_type  = "PREFIXED",operation = "WRITE"},
+    }
+  }
+
+  # ACLs that we can only create after traversing the connector
+  confluent_cloud_connector_specific_acls_post = {
+    "SqlServerCdcSource" = {}
+    "MicrosoftSqlServerSource" = {}
+    "S3_SINK" = local.confluent_cloud_connector_generic_acls_post.SinkConnector
+  }
+
   token_replacements_map = merge({
     for k,v in local.all_connectors_map: 
       k => {
-        # connector id
-        "{CONNECTOR_ID}" = try(
-          confluent_connector.confluent_cloud_connectors_prevent_destroy_true[k].id, 
-          confluent_connector.confluent_cloud_connectors_prevent_destroy_false[k].id, 
-          ""
-       )
+      #   # connector id
+      #   "{CONNECTOR_ID}" = try(
+      #     confluent_connector.confluent_cloud_connectors_prevent_destroy_true[k].id, 
+      #     confluent_connector.confluent_cloud_connectors_prevent_destroy_false[k].id, 
+      #     ""
+      #  )
         
         # topic - from separate db field. dont try to be smart, learn to be stupid
         "{TOPIC}" = local.all_connectors_map[k]["acl_topic_allow"]
@@ -173,7 +192,30 @@ locals {
       }
   })
 
-  # rewrite something
+  token_replacements_post_map = merge({
+    for k,v in local.all_connectors_map: 
+      k => {
+        # connector id
+        "{CONNECTOR_ID}" = try(
+          confluent_connector.confluent_cloud_connectors_prevent_destroy_true[k].id, 
+          confluent_connector.confluent_cloud_connectors_prevent_destroy_false[k].id, 
+          "__UNKNOWN__"
+       )
+
+        # these are not needed         
+        # # topic - from separate db field. dont try to be smart, learn to be stupid
+        # "{TOPIC}" = local.all_connectors_map[k]["acl_topic_allow"]
+
+        # # topic.prefix
+        # "{TOPIC_PREFIX}" = try(jsondecode(local.all_connectors_map[k]["config_nonsensitive"])["topic.prefix"], "__MISSING__")
+
+        # # database.server.name
+        # "{DATABASE_SERVER_NAME}" = try(jsondecode(local.all_connectors_map[k]["config_nonsensitive"])["database.server.name"], "__MISSING__")
+      }
+  })
+
+
+  # rewrite ACLs that must exist BEFORE connector is traversed
   confluent_cloud_connector_instance_acls = merge([
     for k,v in local.all_connectors_map: {
       for id, rule in local.confluent_cloud_connector_specific_acls[jsondecode(v["config_nonsensitive"])["connector.class"]]:
@@ -185,7 +227,7 @@ locals {
 
 
           # override the resource name with token replacement
-          {"resource_name" = replace(
+          {"resource_name_munged" = replace(
             rule.resource_name, 
             "/{([^}]+)}/", 
             lookup(
@@ -201,14 +243,50 @@ locals {
       }
   ]...)
 
+
+  # rewrite ACLs that can only be created AFTER connector is traversed
+  confluent_cloud_connector_instance_acls_post = merge([
+    for k,v in local.all_connectors_map: {
+      for id, rule in local.confluent_cloud_connector_specific_acls_post[jsondecode(v["config_nonsensitive"])["connector.class"]]:
+
+
+        format("%s-%s", k, id) => merge(
+          rule, 
+          {"connector_name" = k},
+
+
+          # override the resource name with token replacement
+          {"resource_name_munged" = replace(
+            rule.resource_name, 
+            "/{([^}]+)}/", 
+            lookup(
+              local.token_replacements_post_map[k], 
+              coalesce(regex("[^{]*(?P<token>{[^}]+})?[^}]*", rule.resource_name).token, "__MISSING__"),
+              "__UNKNOWN__"
+            )
+          )},
+
+          # extract the principal
+          {"principal" = "User:${jsondecode(v["config_nonsensitive"])["kafka.service.account.id"]}"}
+        )
+      }
+  ]...)
 }
 
 output "confluent_cloud_connector_specific_acls" {
   value = local.confluent_cloud_connector_specific_acls
 }
 
+output "confluent_cloud_connector_specific_acls_post" {
+  value = local.confluent_cloud_connector_specific_acls_post
+}
+
 output "token_replacements_map" {
   value = local.token_replacements_map
+}
+
+output "token_replacements_post_map" {
+  value = local.token_replacements_post_map
 }
 
 output "all_connectors_map" {
@@ -221,6 +299,10 @@ output "confluent_cloud_connector_config_sensitive_secret_names"{
 
 output "confluent_cloud_connector_instance_acls" {
   value = local.confluent_cloud_connector_instance_acls
+}
+
+output "confluent_cloud_connector_instance_acls_post" {
+  value = local.confluent_cloud_connector_instance_acls_post
 }
 
 #
@@ -274,7 +356,29 @@ resource "confluent_kafka_acl" "connector_acls" {
   for_each = local.confluent_cloud_connector_instance_acls
   
   resource_type = each.value.resource_type
-  resource_name = each.value.resource_name
+  resource_name = each.value.resource_name_munged
+  pattern_type  = each.value.pattern_type
+  operation     = each.value.operation
+  permission    = "ALLOW"
+  
+  principal     = each.value.principal
+  host          = "*"
+  
+  rest_endpoint = confluent_kafka_cluster.gwilliams-cluster.rest_endpoint
+  kafka_cluster {
+    id = confluent_kafka_cluster.gwilliams-cluster.id
+  }
+  credentials {
+    key    = confluent_api_key.gwilliams-cluster-kafka-api-key.id
+    secret = confluent_api_key.gwilliams-cluster-kafka-api-key.secret
+  }
+}
+
+resource "confluent_kafka_acl" "connector_acls_post" {
+  for_each = local.confluent_cloud_connector_instance_acls_post
+  
+  resource_type = each.value.resource_type
+  resource_name = each.value.resource_name_munged
   pattern_type  = each.value.pattern_type
   operation     = each.value.operation
   permission    = "ALLOW"
