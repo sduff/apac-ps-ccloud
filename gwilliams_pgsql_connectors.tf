@@ -236,9 +236,9 @@ locals {
 
           # extract the principal
           {"principal" = "User:${jsondecode(v["config_nonsensitive"])["kafka.service.account.id"]}"}
-        )
-        # the only way to prevent a terraform resource from being instantiated is to not declare it at all
-      } if ! coalesce(rule.bootstrap_only, false) && local.all_connectors_map[k].status == "RUNNING"
+        ) if ! coalesce(rule.bootstrap_only, false) && local.all_connectors_map[k].status == "RUNNING"
+        # the only way to prevent a terraform resource from being instantiated is to not declare it at
+      } 
   ]...)
 
 
