@@ -239,7 +239,7 @@ locals {
         )
         
         # the only way to prevent a terraform resource from being instantiated is to not declare it at
-        if ! coalesce(rule.bootstrap_only, false) && try(
+        if ! try(rule.bootstrap_only, false) && try(
           confluent_connector.confluent_cloud_connectors_prevent_destroy_true[k],
           confluent_connector.confluent_cloud_connectors_prevent_destroy_false[k]
         ).status == "RUNNING"
