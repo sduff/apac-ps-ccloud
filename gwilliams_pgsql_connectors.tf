@@ -107,11 +107,11 @@ locals {
 
       # Set a CREATE ACL to the following topic prefix:
       # confluent kafka acl create --allow --service-account "<service-account-id>" --operation "CREATE" --prefix --topic "dlq-lcc-"
-      "c" = {resource_type = "TOPIC", resource_name = "dlq-lcc", pattern_type  = "PREFIXED", operation = "CREATE"},
+      "c" = {bootstrap_only = true, resource_type = "TOPIC", resource_name = "dlq-lcc", pattern_type  = "PREFIXED", operation = "CREATE"},
     
       # Set a WRITE ACL to the following topic prefix:
       # confluent kafka acl create --allow --service-account "<service-account-id>" --operation "WRITE" --prefix --topic "dlq-lcc-"
-      "d" = {resource_type = "TOPIC", resource_name = "dlq-lcc", pattern_type  = "PREFIXED",operation = "WRITE"},
+      "d" = {bootstrap_only = true, resource_type = "TOPIC", resource_name = "dlq-lcc", pattern_type  = "PREFIXED",operation = "WRITE"},
     
       # Set a READ ACL to a consumer group with the following prefix:
       # confluent kafka acl create --allow --service-account "<service-account-id>" --operation "READ"  --prefix --consumer-group "connect-lcc-"
@@ -237,7 +237,8 @@ locals {
           # extract the principal
           {"principal" = "User:${jsondecode(v["config_nonsensitive"])["kafka.service.account.id"]}"}
         )
-      }
+        # the only way to prevent a terraform resource from being instantiated is to not declare it at all
+      } if ! coalesce(rule.bootstrap_only, false) && local.all_connectors_map[k].status == "RUNNING"
   ]...)
 
 
