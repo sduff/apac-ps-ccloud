@@ -236,8 +236,13 @@ locals {
 
           # extract the principal
           {"principal" = "User:${jsondecode(v["config_nonsensitive"])["kafka.service.account.id"]}"}
-        ) if ! coalesce(rule.bootstrap_only, false) && local.all_connectors_map[k].status == "RUNNING"
+        )
+        
         # the only way to prevent a terraform resource from being instantiated is to not declare it at
+        if ! try(rule.bootstrap_only, false) && try(
+          confluent_connector.confluent_cloud_connectors_prevent_destroy_true[k],
+          confluent_connector.confluent_cloud_connectors_prevent_destroy_false[k]
+        ).status == "RUNNING"
       } 
   ]...)
 
@@ -323,9 +328,9 @@ resource "confluent_connector" "confluent_cloud_connectors_prevent_destroy_true"
     prevent_destroy = false
   }
 
-  depends_on = [
-    confluent_kafka_acl.connector_acls
-  ]
+  # depends_on = [
+  #   confluent_kafka_acl.connector_acls
+  # ]
 }
 
 resource "confluent_connector" "confluent_cloud_connectors_prevent_destroy_false" {
@@ -345,9 +350,9 @@ resource "confluent_connector" "confluent_cloud_connectors_prevent_destroy_false
     prevent_destroy = false
   }
   
-  depends_on = [
-    confluent_kafka_acl.connector_acls
-  ]
+  # depends_on = [
+  #   confluent_kafka_acl.connector_acls
+  # ]
 }
 
 resource "confluent_kafka_acl" "connector_acls" {
