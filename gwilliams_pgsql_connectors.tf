@@ -103,11 +103,11 @@ locals {
     
       # Set a CREATE ACL to the following topic prefix:
       # confluent kafka acl create --allow --service-account "<service-account-id>" --operation "CREATE" --prefix --topic "dlq-lcc-"
-      "c" = {resource_type = "TOPIC", resource_name = "dlq-lcc-{CONNECTOR_ID}", pattern_type  = "LITERAL", operation = "CREATE"},
+      "c" = {resource_type = "TOPIC", resource_name = "dlq-lcc-{CONNECTOR_ID}", pattern_type  = "PREFIXED", operation = "CREATE"},
     
       # Set a WRITE ACL to the following topic prefix:
       # confluent kafka acl create --allow --service-account "<service-account-id>" --operation "WRITE" --prefix --topic "dlq-lcc-"
-      "d" = {resource_type = "TOPIC", resource_name = "dlq-lcc-{CONNECTOR_ID}", pattern_type  = "LITERAL",operation = "WRITE"},
+      "d" = {resource_type = "TOPIC", resource_name = "dlq-lcc-{CONNECTOR_ID}", pattern_type  = "PREFIXED",operation = "WRITE"},
     
       # Set a READ ACL to a consumer group with the following prefix:
       # confluent kafka acl create --allow --service-account "<service-account-id>" --operation "READ"  --prefix --consumer-group "connect-lcc-"
@@ -156,12 +156,11 @@ locals {
     for k,v in local.all_connectors_map: 
       k => {
         # connector id
-        "{CONNECTOR_ID}" = ""
-        # try(
-        #   confluent_connector.confluent_cloud_connectors_prevent_destroy_true[k].id, 
-        #   confluent_connector.confluent_cloud_connectors_prevent_destroy_false[k].id, 
-        #   ""
-       # )
+        "{CONNECTOR_ID}" = try(
+          confluent_connector.confluent_cloud_connectors_prevent_destroy_true[k].id, 
+          confluent_connector.confluent_cloud_connectors_prevent_destroy_false[k].id, 
+          ""
+       )
         
         # topic - from separate db field. dont try to be smart, learn to be stupid
         "{TOPIC}" = local.all_connectors_map[k]["acl_topic_allow"]
