@@ -1,6 +1,25 @@
+
+# Example of how to extract current state of connectors - needs custom datasource...
+terraform {
+  required_providers {
+    confluent-cloud-datasource-connectors = {
+      source  = "GeoffWilliams/confluent-cloud-datasource-connectors"
+      version = "0.0.2"
+    }
+  }
+}
+
+data "confluent-cloud-datasource-connectors" "confluent_connectors" {
+  for_each = merge(local.connectors_prevent_destroy_false_map, local.connectors_prevent_destroy_true_map)
+  environment_id = "env-w5502w"
+  kafka_cluster_id = "lkc-7n1ny1"
+  connector_name = each.key
+}
+
 # =============================================================================
 # Example of how to manage confluent cloud resources with PostgreSQL
 # =============================================================================
+
 
 #
 # Confluent Cloud Topics
@@ -239,10 +258,7 @@ locals {
         )
         
         # the only way to prevent a terraform resource from being instantiated is to not declare it at
-        if ! try(rule.bootstrap_only, false) && try(
-          confluent_connector.confluent_cloud_connectors_prevent_destroy_true[k],
-          confluent_connector.confluent_cloud_connectors_prevent_destroy_false[k]
-        ).status == "RUNNING"
+        if ! try(rule.bootstrap_only, false) && data.confluent-cloud-datasource-connectors.confluent_connectors[k].status == "DEFINED"
       } 
   ]...)
 
