@@ -253,7 +253,7 @@ locals {
         )
         
         # the only way to prevent a terraform resource from being instantiated is to not declare it at
-        if ! try(rule.bootstrap_only, false) && data.confluent-cloud-datasource-connectors.confluent_connectors[k].status == "NOT_DEFINE"
+        if ! try(rule.bootstrap_only, false) && data.confluent-cloud-datasource-connectors.confluent_connectors[k].status == "NOT_DEFINED"
       } 
   ]...)
 
