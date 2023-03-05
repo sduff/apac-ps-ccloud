@@ -20,6 +20,11 @@ terraform {
       version = "0.5.0"
     }
 
+    confluent-cloud-datasource-connectors = {
+      source  = "GeoffWilliams/confluent-cloud-datasource-connectors"
+      version = "0.0.2"
+    }
+
   }
 }
 
