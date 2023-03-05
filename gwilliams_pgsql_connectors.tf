@@ -319,6 +319,10 @@ output "confluent_cloud_connector_instance_acls_post" {
   value = local.confluent_cloud_connector_instance_acls_post
 }
 
+output "confluent-cloud-datasource-connectors" {
+  value = data.confluent-cloud-datasource-connectors.confluent_connectors
+}
+
 #
 # Connectors 
 #
