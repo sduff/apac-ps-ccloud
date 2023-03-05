@@ -1,14 +1,5 @@
 
 # Example of how to extract current state of connectors - needs custom datasource...
-terraform {
-  required_providers {
-    confluent-cloud-datasource-connectors = {
-      source  = "GeoffWilliams/confluent-cloud-datasource-connectors"
-      version = "0.0.2"
-    }
-  }
-}
-
 data "confluent-cloud-datasource-connectors" "confluent_connectors" {
   for_each = merge(local.connectors_prevent_destroy_false_map, local.connectors_prevent_destroy_true_map)
   environment_id = "env-w5502w"
