@@ -331,7 +331,7 @@ resource "confluent_connector" "confluent_cloud_connectors_prevent_destroy_true"
 
   for_each = local.connectors_prevent_destroy_true_map
 
-  config_sensitive = try(local.connector_config_sensitive[each.secretsmanager_arn], {})
+  config_sensitive = try(local.connector_config_sensitive[each.value.secretsmanager_arn], {})
   config_nonsensitive = jsondecode(each.value.config_nonsensitive)
 
   lifecycle {
@@ -353,7 +353,7 @@ resource "confluent_connector" "confluent_cloud_connectors_prevent_destroy_false
 
   for_each = local.connectors_prevent_destroy_false_map
 
-  config_sensitive = try(local.connector_config_sensitive[each.secretsmanager_arn], {})
+  config_sensitive = try(local.connector_config_sensitive[each.value.secretsmanager_arn], {})
   config_nonsensitive = jsondecode(each.value.config_nonsensitive)
 
   lifecycle {
