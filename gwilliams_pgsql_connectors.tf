@@ -62,7 +62,7 @@ data "sql_query" "gwilliams_sql_confluent_cloud_connectors_secretsmanager_arns" 
 
 # read latest version each secret our SQL query picked up
 data "aws_secretsmanager_secret_version" "secrets" {
-  for_each = toset(secretsmanager_arns)
+  for_each = toset(local.secretsmanager_arns)
   secret_id = each.value
   provider = aws.gwilliams_aws
 }
