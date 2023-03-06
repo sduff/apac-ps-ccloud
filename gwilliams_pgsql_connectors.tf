@@ -36,12 +36,17 @@ data "confluent-cloud-datasource-connectors" "confluent_connectors" {
 # If dynamic lifecycle tagging is required we can filter prevent_destroy=true vs prevent_destroy=false
 # and have each dataset be managed by a different terraform resource.
 data "sql_query" "gwilliams_sql_confluent_cloud_connectors_prevent_destroy_true" {
-  query = "SELECT * FROM confluent_cloud.connectors WHERE prevent_destroy = true and managed = true"
+  query = "SELECT * FROM confluent_cloud_connectors WHERE prevent_destroy = true and managed = true"
   provider = sql.gwilliams_sql
 }
 
 data "sql_query" "gwilliams_sql_confluent_cloud_connectors_prevent_destroy_false" {
-  query = "SELECT * FROM confluent_cloud.connectors WHERE prevent_destroy = false and managed = true"
+  query = "SELECT * FROM confluent_cloud_connectors WHERE prevent_destroy = false and managed = true"
+  provider = sql.gwilliams_sql
+}
+
+data "sql_query" "gwilliams_sql_confluent_cloud_connectors_secretsmanager_arns" {
+  query = "SELECT DISTINCT secretsmanager_arn FROM confluent_cloud_connectors WHERE managed = true"
   provider = sql.gwilliams_sql
 }
 
@@ -51,30 +56,14 @@ data "sql_query" "gwilliams_sql_confluent_cloud_connectors_prevent_destroy_false
 # This is used to populate the `config_sensitive` argument when defining a connector. There is no way in terraform
 # for a data lookup to be "optional" https://github.com/hashicorp/terraform/issues/16380
 #
-# The closest we can come to this is to list all avaiable secrets in AWS that match our special tag and then read 
-# only those into terraform. We can then coalesce an empty json object or the secret if present
+# The closest we can come to this is to list all avaiable secrets in the database and then read  only those into 
+# terraform. We can then coalesce an empty json object or the secret if present
 #
 
-# secrets MUST be named confluent_cloud_connector_config_sensitive/<key of connector>
-
-# read the names of secrets in secretsmanager that are tagged with our special tag (confluent_cloud_connector_config_sensitive=true)
-data "aws_secretsmanager_secrets" "secrets" {
-  filter {
-    name = "tag-key"
-    values = ["confluent_cloud_connector_config_sensitive"]
-  }
-  filter {
-    name   = "tag-value"
-    values = [true]
-  }
-  provider = aws.gwilliams_aws
-}
-
-
-# read each secret in /secret/connector_config_sensitive
+# read latest version each secret our SQL query picked up
 data "aws_secretsmanager_secret_version" "secrets" {
-  for_each = data.aws_secretsmanager_secrets.secrets.names
-  secret_id = each.key
+  for_each = toset(secretsmanager_arns)
+  secret_id = each.value
   provider = aws.gwilliams_aws
 }
 
@@ -94,12 +83,18 @@ locals {
 
   all_connectors_map = merge(local.connectors_prevent_destroy_false_map, local.connectors_prevent_destroy_true_map)
 
-  # transform {"connector_config_sensitive/MySqlCdcSourceConnector_0": {...}"}
-  # to {MySqlCdcSourceConnector_0 => {...}}
-  # eg remove connector_config_sensitive prefix
+  # transform {"results": [{"secretsmanager_arn": "arn1"},{"secretsmanager_arn": "arn2"},{"secretsmanager_arn": "arn"}]}
+  # to ["arn1", "ar2", "arnn"]
+  secretsmanager_arns = [ 
+    for row in data.sql_query.gwilliams_sql_confluent_cloud_connectors_secretsmanager_arns.result:
+      row.secretsmanager_arn
+  ]
+
+  # transform {"nameofsecret": {...}"}
+  # to {"arnofsecret" => {...}}
   connector_config_sensitive = {
     for k,v in data.aws_secretsmanager_secret_version.secrets:
-      trimprefix(k, "confluent_cloud_connector_config_sensitive/") => jsondecode(v.secret_string)
+      v.secret_id => jsondecode(v.secret_string)
   }
 
 
@@ -336,7 +331,7 @@ resource "confluent_connector" "confluent_cloud_connectors_prevent_destroy_true"
 
   for_each = local.connectors_prevent_destroy_true_map
 
-  config_sensitive = try(local.connector_config_sensitive[each.key], {})
+  config_sensitive = try(local.connector_config_sensitive[each.secretsmanager_arn], {})
   config_nonsensitive = jsondecode(each.value.config_nonsensitive)
 
   lifecycle {
@@ -358,7 +353,7 @@ resource "confluent_connector" "confluent_cloud_connectors_prevent_destroy_false
 
   for_each = local.connectors_prevent_destroy_false_map
 
-  config_sensitive = try(local.connector_config_sensitive[each.key], {})
+  config_sensitive = try(local.connector_config_sensitive[each.secretsmanager_arn], {})
   config_nonsensitive = jsondecode(each.value.config_nonsensitive)
 
   lifecycle {
